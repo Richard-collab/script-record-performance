@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Button, IconButton } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined';
 
@@ -8,6 +8,16 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ lastUpdated }) => {
+    const handleExport = () => {
+        // Mock export functionality
+        alert("正在导出报表，请稍候...");
+    };
+
+    const handleShare = () => {
+        // Mock share functionality
+        alert("分享链接已复制到剪贴板！");
+    };
+
     return (
         <Box sx={{
             display: 'flex',
@@ -30,6 +40,7 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated }) => {
                     variant="outlined"
                     startIcon={<FileDownloadOutlinedIcon />}
                     size="small"
+                    onClick={handleExport}
                 >
                     导出报表
                 </Button>
@@ -37,6 +48,7 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated }) => {
                     variant="outlined"
                     startIcon={<ShareOutlinedIcon />}
                     size="small"
+                    onClick={handleShare}
                 >
                     分享
                 </Button>

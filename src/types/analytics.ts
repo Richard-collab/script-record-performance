@@ -24,7 +24,7 @@ export interface AnalyticsData {
 export interface FilterParams {
     dateRange: [Date | null, Date | null];
     baselineScript: string;
-    baselineTask: string;
+    baselineTask: string[]; // Changed to array
     experimentScript: string;
-    experimentTask: string;
+    experimentTask: string[]; // Changed to array
 }
