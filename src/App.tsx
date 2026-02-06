@@ -71,9 +71,9 @@ function App() {
         handleSearch({
             dateRange: [new Date(), new Date()],
             baselineScript: 'A1',
-            baselineTask: '10086',
+            baselineTask: ['10086'],
             experimentScript: 'B1',
-            experimentTask: '10087'
+            experimentTask: ['10087']
         });
     }, []);
 
@@ -91,7 +91,7 @@ function App() {
                                         <CircularProgress />
                                     </Box>
                                 ) : (
-                                    <MetricTable data={data} />
+                                    <MetricTable data={data} onDataUpdate={setData} />
                                 )}
                             </>
                         ) : (

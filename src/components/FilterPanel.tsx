@@ -1,5 +1,5 @@
-import React from 'react';
-import { Box, Typography, TextField, MenuItem, Button, Select, FormControl, InputLabel, Divider, Switch, FormControlLabel } from '@mui/material';
+import React, { useEffect } from 'react';
+import { Box, Typography, MenuItem, Button, Select, Divider, Switch, FormControlLabel, type SelectChangeEvent } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -15,22 +15,51 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onSearch }) => {
     const [startDate, setStartDate] = React.useState<Dayjs | null>(dayjs('2024-10-01'));
     const [endDate, setEndDate] = React.useState<Dayjs | null>(dayjs('2024-10-07'));
 
-    // Mock selection state
     const [baselineScript, setBaselineScript] = React.useState('A1');
-    const [baselineTask, setBaselineTask] = React.useState('10086');
+    const [baselineTasks, setBaselineTasks] = React.useState<string[]>([]);
+
     const [experimentScript, setExperimentScript] = React.useState('B1');
-    const [experimentTask, setExperimentTask] = React.useState('10087');
+    const [experimentTasks, setExperimentTasks] = React.useState<string[]>([]);
+
     const [showStats, setShowStats] = React.useState(true);
+
+    // Mock options
+    const getTaskOptions = (script: string) => {
+        if (script === 'A1') return ['10086', '10088'];
+        if (script === 'A2') return ['10090'];
+        if (script === 'B1') return ['10087', '10089'];
+        if (script === 'B2') return ['10091'];
+        return [];
+    };
+
+    const handleBaselineTaskChange = (event: SelectChangeEvent<typeof baselineTasks>) => {
+        const { target: { value } } = event;
+        setBaselineTasks(typeof value === 'string' ? value.split(',') : value);
+    };
+
+    const handleExperimentTaskChange = (event: SelectChangeEvent<typeof experimentTasks>) => {
+        const { target: { value } } = event;
+        setExperimentTasks(typeof value === 'string' ? value.split(',') : value);
+    };
 
     const handleSearch = () => {
         onSearch({
             dateRange: [startDate?.toDate() || null, endDate?.toDate() || null],
             baselineScript,
-            baselineTask,
+            baselineTask: baselineTasks,
             experimentScript,
-            experimentTask
+            experimentTask: experimentTasks
         });
     };
+
+    // Clear tasks when script changes
+    useEffect(() => {
+        setBaselineTasks([]);
+    }, [baselineScript]);
+
+    useEffect(() => {
+        setExperimentTasks([]);
+    }, [experimentScript]);
 
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -54,7 +83,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onSearch }) => {
                         时间范围
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                         {/* Simplified Date Range Display/Picker for now */}
                          <DatePicker
                             value={startDate}
                             onChange={(newValue) => setStartDate(newValue)}
@@ -91,16 +119,25 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onSearch }) => {
                     </Select>
 
                     <Typography variant="body2" fontWeight="bold" gutterBottom>
-                        任务 ID
+                        任务 ID (多选)
                     </Typography>
                     <Select
                         fullWidth
                         size="small"
-                        value={baselineTask}
-                        onChange={(e) => setBaselineTask(e.target.value)}
+                        multiple
+                        value={baselineTasks}
+                        onChange={handleBaselineTaskChange}
+                        renderValue={(selected) => selected.length === 0 ? "全部 (All)" : selected.join(', ')}
+                        displayEmpty
                     >
-                        <MenuItem value="10086">10086</MenuItem>
-                        <MenuItem value="10088">10088</MenuItem>
+                         <MenuItem disabled value="">
+                            <em>选择任务 (空=全部)</em>
+                        </MenuItem>
+                        {getTaskOptions(baselineScript).map(task => (
+                            <MenuItem key={task} value={task}>
+                                {task}
+                            </MenuItem>
+                        ))}
                     </Select>
                 </Box>
 
@@ -128,16 +165,25 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onSearch }) => {
                     </Select>
 
                     <Typography variant="body2" fontWeight="bold" gutterBottom>
-                        任务 ID
+                        任务 ID (多选)
                     </Typography>
                     <Select
                         fullWidth
                         size="small"
-                        value={experimentTask}
-                        onChange={(e) => setExperimentTask(e.target.value)}
+                        multiple
+                        value={experimentTasks}
+                        onChange={handleExperimentTaskChange}
+                        renderValue={(selected) => selected.length === 0 ? "全部 (All)" : selected.join(', ')}
+                        displayEmpty
                     >
-                        <MenuItem value="10087">10087</MenuItem>
-                        <MenuItem value="10089">10089</MenuItem>
+                         <MenuItem disabled value="">
+                            <em>选择任务 (空=全部)</em>
+                        </MenuItem>
+                        {getTaskOptions(experimentScript).map(task => (
+                            <MenuItem key={task} value={task}>
+                                {task}
+                            </MenuItem>
+                        ))}
                     </Select>
                 </Box>
 
