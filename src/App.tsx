@@ -4,9 +4,9 @@ import DashboardLayout from './components/DashboardLayout';
 import FilterPanel from './components/FilterPanel';
 import Header from './components/Header';
 import MetricTable from './components/MetricTable';
-import { fetchAnalyticsData } from './services/mockApi';
+import { fetchAnalyticsData } from './utils/api';
 import type { AnalyticsData, FilterParams } from './types/analytics';
-import { Box, CircularProgress } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
 
 // Custom theme to match the clean, professional look
 const theme = createTheme({
@@ -57,7 +57,13 @@ function App() {
     const handleSearch = async (filters: FilterParams) => {
         setLoading(true);
         try {
-            const result = await fetchAnalyticsData(filters);
+            const result = await fetchAnalyticsData(
+                filters.dateRange,
+                filters.baselineScript,
+                filters.baselineTask,  // 现在支持 string | string[]
+                filters.experimentScript,
+                filters.experimentTask  // 现在支持 string | string[]
+            );
             setData(result);
         } catch (error) {
             console.error("Failed to fetch data", error);
@@ -66,16 +72,16 @@ function App() {
         }
     };
 
-    // Initial load
-    useEffect(() => {
-        handleSearch({
-            dateRange: [new Date(), new Date()],
-            baselineScript: 'A1',
-            baselineTask: '10086',
-            experimentScript: 'B1',
-            experimentTask: '10087'
-        });
-    }, []);
+    // Initial load - 注释掉初始加载，等待用户在筛选面板选择后再加载
+    // useEffect(() => {
+    //     handleSearch({
+    //         dateRange: [new Date(), new Date()],
+    //         baselineScript: 'A1',
+    //         baselineTask: '10086',
+    //         experimentScript: 'B1',
+    //         experimentTask: '10087'
+    //     });
+    // }, []);
 
     return (
         <ThemeProvider theme={theme}>
@@ -83,20 +89,23 @@ function App() {
                 <Box sx={{ display: 'flex', height: '100%' }}>
                     <FilterPanel onSearch={handleSearch} />
                     <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', bgcolor: 'background.default' }}>
-                        {data ? (
-                            <>
-                                <Header lastUpdated={data.lastUpdated} />
-                                {loading ? (
-                                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                                        <CircularProgress />
-                                    </Box>
-                                ) : (
-                                    <MetricTable data={data} />
-                                )}
-                            </>
-                        ) : (
+                        {loading ? (
                             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                                 <CircularProgress />
+                            </Box>
+                        ) : data ? (
+                            <>
+                                <Header lastUpdated={data.lastUpdated} data={data} />
+                                <MetricTable data={data} />
+                            </>
+                        ) : (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', flexDirection: 'column', gap: 2 }}>
+                                <Typography variant="h6" color="text.secondary">
+                                    请在左侧筛选面板选择分析参数
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    选择日期、基准话术和实验话术后，点击"开始分析"按钮
+                                </Typography>
                             </Box>
                         )}
                     </Box>

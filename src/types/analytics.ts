@@ -19,12 +19,14 @@ export interface AnalyticsGroup {
 export interface AnalyticsData {
     groups: AnalyticsGroup[];
     lastUpdated: string;
+    baselineTitle?: string;
+    comparisonTitle?: string;
 }
 
 export interface FilterParams {
     dateRange: [Date | null, Date | null];
     baselineScript: string;
-    baselineTask: string;
+    baselineTask: string | string[];  // 支持单选或多选
     experimentScript: string;
-    experimentTask: string;
+    experimentTask: string | string[];  // 支持单选或多选
 }
