@@ -143,6 +143,7 @@ const MetricTable: React.FC<MetricTableProps> = ({ data, onMetricUpdate }) => {
 
     return (
         <Box 
+            id="metric-table-container"
             data-export-area
             sx={{ 
                 flexGrow: 1, 
