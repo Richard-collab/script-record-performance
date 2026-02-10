@@ -225,7 +225,7 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated, data, onAddMetric, onAddMe
             }}>
                 <Box>
                     <Typography variant="h5" fontWeight="bold">
-                        数据统计看板
+                        话术数据统计看板2.0
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                         最后更新: {lastUpdated}
