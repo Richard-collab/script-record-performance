@@ -16,10 +16,12 @@ function App() {
         activeFilters,
         initialFilters,
         urlParsed,
+        customMetrics,
         handleSearch,
         handleMetricUpdate,
         handleAddCustomMetric,
-        handleAddCustomMetrics
+        handleAddCustomMetrics,
+        handleUpdateCustomMetrics
     } = useAnalytics();
 
     const [showScriptDiff, setShowScriptDiff] = useState(false);
@@ -44,8 +46,10 @@ function App() {
                                 <Header
                                     lastUpdated={data.lastUpdated}
                                     data={data}
+                                    customMetrics={customMetrics}
                                     onAddMetric={handleAddCustomMetric}
                                     onAddMetrics={handleAddCustomMetrics}
+                                    onUpdateMetrics={handleUpdateCustomMetrics}
                                 />
                                 <Box sx={{ flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
                                     <MetricTable data={data} onMetricUpdate={handleMetricUpdate} />

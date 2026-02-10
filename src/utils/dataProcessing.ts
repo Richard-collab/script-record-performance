@@ -22,6 +22,33 @@ export const ensurePostProcessGroup = (updatedData: AnalyticsData): AnalyticsDat
     return updatedData;
 };
 
+export const replaceCustomMetrics = (data: AnalyticsData, newMetrics: CustomMetricParams[]): AnalyticsData => {
+    let updatedData = ensurePostProcessGroup(data);
+    const targetGroup = updatedData.groups.find(
+        group => group.title === '后程数据' || group.id === 'post_process'
+    );
+
+    if (targetGroup) {
+        // Replace all metrics in the target group
+        targetGroup.metrics = newMetrics.map(cm => {
+            const { diffValue, diffPercentage, diffDirection } = recalculateMetricDiff(
+                cm.baselineValue,
+                cm.comparisonValue
+            );
+            return {
+                id: cm.id,
+                label: cm.label,
+                baselineValue: cm.baselineValue,
+                comparisonValue: cm.comparisonValue,
+                diffValue,
+                diffPercentage,
+                diffDirection
+            };
+        });
+    }
+    return updatedData;
+};
+
 export const applyCustomMetrics = (data: AnalyticsData, currentCustom: CustomMetricParams[]): AnalyticsData => {
     if (!currentCustom.length) return data;
 

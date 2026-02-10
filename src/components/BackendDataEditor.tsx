@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -33,13 +33,22 @@ interface MetricRow {
 
 interface BackendDataEditorProps {
     open: boolean;
+    initialData?: MetricRow[];
     onClose: () => void;
-    onSave: (metrics: { label: string; baselineValue: string; comparisonValue: string }[]) => void;
+    onSave: (metrics: MetricRow[]) => void;
 }
 
-const BackendDataEditor: React.FC<BackendDataEditorProps> = ({ open, onClose, onSave }) => {
+const BackendDataEditor: React.FC<BackendDataEditorProps> = ({ open, initialData, onClose, onSave }) => {
     const [activeTab, setActiveTab] = useState(0);
     const [stagingList, setStagingList] = useState<MetricRow[]>([]);
+
+    useEffect(() => {
+        if (open && initialData) {
+            setStagingList(initialData);
+        } else if (open) {
+            setStagingList([]);
+        }
+    }, [open, initialData]);
 
     // Manual Input State
     const [manualLabel, setManualLabel] = useState('');
@@ -108,11 +117,7 @@ const BackendDataEditor: React.FC<BackendDataEditorProps> = ({ open, onClose, on
     };
 
     const handleSave = () => {
-        onSave(stagingList.map(({ label, baselineValue, comparisonValue }) => ({
-            label,
-            baselineValue,
-            comparisonValue
-        })));
+        onSave(stagingList);
         handleClose();
     };
 
@@ -259,9 +264,8 @@ const BackendDataEditor: React.FC<BackendDataEditorProps> = ({ open, onClose, on
                 <Button
                     variant="contained"
                     onClick={handleSave}
-                    disabled={stagingList.length === 0}
                 >
-                    确认导入 ({stagingList.length})
+                    确认保存 ({stagingList.length})
                 </Button>
             </DialogActions>
         </Dialog>
