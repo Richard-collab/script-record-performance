@@ -108,28 +108,33 @@ const ScriptDiffViewer: React.FC<ScriptDiffViewerProps> = ({ baselineScript, exp
     }
 
     return (
-        <Box sx={{ p: 3, bgcolor: '#f5f5f5' }}>
-             <Typography variant="h6" gutterBottom>
-                语料差异
-            </Typography>
+        <Box sx={{ p: 3, bgcolor: 'background.default' }}>
             <Paper elevation={0} sx={{ border: '1px solid #e0e0e0', overflow: 'hidden' }}>
                  {/* Header */}
-                 <Box sx={{ display: 'flex', borderBottom: '1px solid #e0e0e0', bgcolor: '#009688', color: 'white' }}>
-                    <Box sx={{ width: 200, p: 2, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.2)' }}>
-                        <Typography fontWeight="bold">语料差异</Typography>
+                 <Box sx={{ display: 'flex', borderBottom: '1px solid #e0e0e0' }}>
+                    <Box sx={{ width: 200, p: 2, flexShrink: 0, borderRight: '1px solid #e0e0e0', bgcolor: '#f5f5f5' }}>
+                        <Typography fontWeight={700}>语料差异</Typography>
                     </Box>
-                    <Box sx={{ flex: 1, p: 2, borderRight: '1px solid rgba(255,255,255,0.2)' }}>
-                        <Typography fontWeight="bold">{baselineScript}</Typography>
+                    <Box sx={{ flex: 1, p: 2, borderRight: '1px solid #e0e0e0', bgcolor: '#e3f2fd' }}>
+                        <Typography fontWeight={700} align="center">{baselineScript}</Typography>
                     </Box>
-                    <Box sx={{ flex: 1, p: 2 }}>
-                        <Typography fontWeight="bold">{experimentScript}</Typography>
+                    <Box sx={{ flex: 1, p: 2, bgcolor: '#e8f5e9' }}>
+                        <Typography fontWeight={700} align="center">{experimentScript}</Typography>
                     </Box>
                  </Box>
 
                  {/* Rows */}
                  {pairs.map((pair, index) => (
-                    <Box key={index} sx={{ display: 'flex', borderBottom: '1px solid #e0e0e0', bgcolor: index % 2 === 0 ? 'white' : '#f9f9f9' }}>
-                        <Box sx={{ width: 200, p: 2, flexShrink: 0, borderRight: '1px solid #e0e0e0' }}>
+                    <Box
+                        key={index}
+                        sx={{
+                            display: 'flex',
+                            borderBottom: '1px solid #e0e0e0',
+                            bgcolor: 'white',
+                            '&:hover': { bgcolor: '#f9f9f9' }
+                        }}
+                    >
+                        <Box sx={{ width: 200, p: 2, flexShrink: 0, borderRight: '1px solid #e0e0e0', bgcolor: '#fafafa' }}>
                             <Typography variant="subtitle2" fontWeight="bold">
                                 {pair.canvasName}
                             </Typography>

@@ -4,3 +4,4 @@ $ vite
 
   ➜  Local:   http://localhost:5173/
   ➜  Network: use --host to expose
+8:29:03 AM [vite] (client) hmr update /src/components/ScriptDiffViewer.tsx
