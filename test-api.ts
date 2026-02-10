@@ -44,6 +44,8 @@ async function testAPI() {
 
       // 2. 测试获取第一个脚本的详细数据
       const testScript = scripts[0];
+      if (!testScript) throw new Error("No script found");
+
       console.log(`2️⃣ 测试 getInfoByScript - 获取脚本详情`);
       console.log(`   脚本名称: ${testScript}`);
       
@@ -74,13 +76,15 @@ async function testAPI() {
       if (scripts.length > 1) {
         console.log(`\n3️⃣ 测试多脚本对比`);
         const testScript2 = scripts[1];
-        console.log(`   对比脚本: ${testScript2}`);
-        
-        const scriptData2 = await getInfoByScript(testDate, testScript2);
-        if (scriptData2.length > 0) {
-          console.log(`   ✅ 获取到 ${scriptData2.length} 条记录`);
-          console.log(`   - 外呼量: ${scriptData2[0].outbound_count}`);
-          console.log(`   - 接通量: ${scriptData2[0].pickup_count}`);
+        if (testScript2) {
+          console.log(`   对比脚本: ${testScript2}`);
+
+          const scriptData2 = await getInfoByScript(testDate, testScript2);
+          if (scriptData2.length > 0) {
+            console.log(`   ✅ 获取到 ${scriptData2.length} 条记录`);
+            console.log(`   - 外呼量: ${scriptData2[0].outbound_count}`);
+            console.log(`   - 接通量: ${scriptData2[0].pickup_count}`);
+          }
         }
       }
     }

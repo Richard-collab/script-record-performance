@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import DashboardLayout from './components/DashboardLayout';
 import FilterPanel from './components/FilterPanel';
 import Header from './components/Header';
 import MetricTable from './components/MetricTable';
+import ScriptDiffViewer from './components/ScriptDiffViewer';
 import { theme } from './theme';
 import { useAnalytics } from './hooks/useAnalytics';
 
@@ -12,6 +13,7 @@ function App() {
     const {
         data,
         loading,
+        activeFilters,
         initialFilters,
         urlParsed,
         handleSearch,
@@ -19,6 +21,8 @@ function App() {
         handleAddCustomMetric,
         handleAddCustomMetrics
     } = useAnalytics();
+
+    const [showScriptDiff, setShowScriptDiff] = useState(false);
 
     return (
         <ThemeProvider theme={theme}>
@@ -28,6 +32,7 @@ function App() {
                         key={urlParsed ? 'loaded' : 'loading'}
                         onSearch={(filters) => handleSearch(filters)}
                         initialFilters={initialFilters} 
+                        onShowDiffChange={setShowScriptDiff}
                     />
                     <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', bgcolor: 'background.default' }}>
                         {loading ? (
@@ -42,7 +47,15 @@ function App() {
                                     onAddMetric={handleAddCustomMetric}
                                     onAddMetrics={handleAddCustomMetrics}
                                 />
-                                <MetricTable data={data} onMetricUpdate={handleMetricUpdate} />
+                                <Box sx={{ flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+                                    <MetricTable data={data} onMetricUpdate={handleMetricUpdate} />
+                                    {showScriptDiff && activeFilters.baselineScript && activeFilters.experimentScript && (
+                                        <ScriptDiffViewer
+                                            baselineScript={activeFilters.baselineScript}
+                                            experimentScript={activeFilters.experimentScript}
+                                        />
+                                    )}
+                                </Box>
                             </>
                         ) : (
                             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', flexDirection: 'column', gap: 2 }}>

@@ -74,8 +74,8 @@ async function testFullFlow() {
     }
 
     // 步骤2: 选择两个脚本进行对比
-    const baselineScript = scripts[0];
-    const experimentScript = scripts[1];
+    const baselineScript = scripts[0]!;
+    const experimentScript = scripts[1]!;
 
     console.log(`📌 步骤2: 选择对比脚本`);
     console.log(`   基准脚本 (A): ${baselineScript}`);

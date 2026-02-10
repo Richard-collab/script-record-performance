@@ -32,7 +32,7 @@ const EditableCell: React.FC<EditableCellProps> = ({ value, onSave, align = 'cen
     // 提取主值（用于编辑）
     const extractMainValue = (val: string): string => {
         const match = val.match(/^([^[]+)/);
-        return match ? match[1].trim() : val;
+        return (match && match[1]) ? match[1].trim() : val;
     };
 
     const handleStartEdit = () => {
@@ -146,11 +146,8 @@ const MetricTable: React.FC<MetricTableProps> = ({ data, onMetricUpdate }) => {
             id="metric-table-container"
             data-export-area
             sx={{ 
-                flexGrow: 1, 
-                overflow: 'auto', 
                 p: 3, 
                 bgcolor: 'background.default',
-                height: '100%'
             }}
         >
             <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0' }}>

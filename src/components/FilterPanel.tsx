@@ -19,12 +19,16 @@ interface FilterPanelProps {
      * 初始筛选参数，用于URL参数回显
      */
     initialFilters?: Partial<FilterParams>;
+    /**
+     * 切换显示话术差异时的回调函数
+     */
+    onShowDiffChange?: (show: boolean) => void;
 }
 
 /**
  * 筛选面板组件 (FilterPanel)
  */
-const FilterPanel: React.FC<FilterPanelProps> = ({ onSearch, initialFilters }) => {
+const FilterPanel: React.FC<FilterPanelProps> = ({ onSearch, initialFilters, onShowDiffChange }) => {
     // ==========================================
     // 状态管理 (State Management)
     // ==========================================
@@ -54,6 +58,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onSearch, initialFilters }) =
     const [experimentTaskOptions, setExperimentTaskOptions] = useState<string[]>([]); // 实验任务下拉选项
 
     const [showStats, setShowStats] = useState(true); // 是否显示数据统计开关
+    const [showScriptDiff, setShowScriptDiff] = useState(false); // 是否显示话术差异开关
 
     const normalizeOption = (value: string) => value.toLowerCase();
 
@@ -85,6 +90,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onSearch, initialFilters }) =
             }
         }
     }, [initialFilters]); // Careful: if objectref changes but values same. 
+
+    // 监听 showScriptDiff 变化并通知父组件
+    useEffect(() => {
+        if (onShowDiffChange) {
+            onShowDiffChange(showScriptDiff);
+        }
+    }, [showScriptDiff, onShowDiffChange]);
 
 
     // ==========================================
@@ -382,11 +394,20 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onSearch, initialFilters }) =
                     />
                 </Box>
 
-                <FormControlLabel
-                    control={<Switch checked={showStats} onChange={(e) => setShowStats(e.target.checked)} />}
-                    label="显示数据统计"
-                    sx={{ mt: 'auto' }}
-                />
+                <Box sx={{ mt: 'auto', display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <FormControlLabel
+                            control={<Switch size="small" checked={showStats} onChange={(e) => setShowStats(e.target.checked)} />}
+                            label={<Typography variant="body2">显示数据统计</Typography>}
+                            sx={{ mr: 0 }}
+                        />
+                        <FormControlLabel
+                            control={<Switch size="small" checked={showScriptDiff} onChange={(e) => setShowScriptDiff(e.target.checked)} />}
+                            label={<Typography variant="body2">显示话术差异</Typography>}
+                            sx={{ mr: 0 }}
+                        />
+                    </Box>
+                </Box>
 
                 <Box>
                     <Button

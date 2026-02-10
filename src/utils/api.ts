@@ -43,6 +43,14 @@ export interface ScriptTaskData {
   [key: string]: any; // 允许其他动态字段
 }
 
+export interface CorpusData {
+  script_id: number;
+  script_name: string;
+  canvas_name: string;
+  corpus_name: string;
+  corpus_content: string;
+}
+
 interface HealthResponse {
   status: string;
   db_path: string;
@@ -206,6 +214,25 @@ export async function getInfoByScript(date: string, scriptNames: string | string
   } catch (error) {
     // 错误处理
     console.error("Error fetching info by script:", error);
+    return [];
+  }
+}
+
+/**
+ * 根据脚本名称获取语料信息
+ * GET /getCorpusByScript
+ * @param scriptName - 脚本名称
+ */
+export async function getCorpusByScript(scriptName: string): Promise<CorpusData[]> {
+  const params = new URLSearchParams();
+  params.append("script_name", scriptName);
+
+  try {
+    const results = await fetchClient<CorpusData[]>('/getCorpusByScript', params);
+    console.log(`✅ GetCorpusByScript Successful: Found ${results.length} records.`);
+    return results;
+  } catch (error) {
+    console.error("Error fetching corpus by script:", error);
     return [];
   }
 }
@@ -653,7 +680,7 @@ export async function fetchAnalyticsData(
         baseConversionRate = ' [100%]';
         expConversionRate = ' [100%]';
       } else if (index > 0) {
-        const prevKey = sortedKeys[index - 1];
+        const prevKey = sortedKeys[index - 1]!;
         const prevBaseVal = (baselineHitRate[prevKey] || 0) * 100;
         const prevExpVal = (experimentHitRate[prevKey] || 0) * 100;
         
