@@ -3,7 +3,7 @@ import type { AnalyticsData, FilterParams, AnalyticsMetric } from '../types/anal
 import { fetchAnalyticsData } from '../utils/api';
 import { parseUrlParams, serializeFilters } from '../utils/urlParams';
 import type { MetricOverride, CustomMetricParams } from '../utils/urlParams';
-import { processAnalyticsData, updateMetricInData, applyCustomMetrics } from '../utils/dataProcessing';
+import { processAnalyticsData, updateMetricInData, applyCustomMetrics, replaceCustomMetrics } from '../utils/dataProcessing';
 
 export const useAnalytics = () => {
     const [data, setData] = useState<AnalyticsData | null>(null);
@@ -173,15 +173,25 @@ export const useAnalytics = () => {
         setData(updatedData);
     };
 
+    const handleUpdateCustomMetrics = (newMetrics: CustomMetricParams[]) => {
+        if (!data) return;
+
+        setCustomMetrics(newMetrics);
+        const updatedData = replaceCustomMetrics(JSON.parse(JSON.stringify(data)), newMetrics);
+        setData(updatedData);
+    };
+
     return {
         data,
         loading,
         activeFilters,
         initialFilters,
         urlParsed,
+        customMetrics,
         handleSearch,
         handleMetricUpdate,
         handleAddCustomMetric,
-        handleAddCustomMetrics
+        handleAddCustomMetrics,
+        handleUpdateCustomMetrics
     };
 };

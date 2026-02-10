@@ -15,11 +15,13 @@ import BackendDataEditor from './BackendDataEditor';
 interface HeaderProps {
     lastUpdated: string;
     data?: AnalyticsData;
+    customMetrics?: { id: string; label: string; baselineValue: string; comparisonValue: string }[];
     onAddMetric?: (label: string, baselineValue: string, comparisonValue: string) => void;
     onAddMetrics?: (rows: { label: string; baselineValue: string; comparisonValue: string }[]) => void;
+    onUpdateMetrics?: (rows: { id: string; label: string; baselineValue: string; comparisonValue: string }[]) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ lastUpdated, data, onAddMetric, onAddMetrics }) => {
+const Header: React.FC<HeaderProps> = ({ lastUpdated, data, customMetrics, onAddMetric, onAddMetrics, onUpdateMetrics }) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [editorOpen, setEditorOpen] = useState(false);
     const [shareDialogOpen, setShareDialogOpen] = useState(false);
@@ -203,13 +205,17 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated, data, onAddMetric, onAddMe
         setEditorOpen(true);
     };
 
-    const handleSaveMetrics = (metrics: { label: string; baselineValue: string; comparisonValue: string }[]) => {
-        if (metrics.length === 0) return;
-
-        if (onAddMetrics) {
-            onAddMetrics(metrics);
-        } else if (onAddMetric) {
-            metrics.forEach(row => onAddMetric(row.label, row.baselineValue, row.comparisonValue));
+    const handleSaveMetrics = (metrics: { id: string; label: string; baselineValue: string; comparisonValue: string }[]) => {
+        // Allow saving empty list (deleting all)
+        if (onUpdateMetrics) {
+            onUpdateMetrics(metrics);
+        } else if (metrics.length > 0) {
+            // Fallback for legacy behavior if onUpdateMetrics is not provided
+            if (onAddMetrics) {
+                onAddMetrics(metrics);
+            } else if (onAddMetric) {
+                metrics.forEach(row => onAddMetric(row.label, row.baselineValue, row.comparisonValue));
+            }
         }
     };
 
@@ -309,6 +315,7 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated, data, onAddMetric, onAddMe
 
             <BackendDataEditor
                 open={editorOpen}
+                initialData={customMetrics}
                 onClose={() => setEditorOpen(false)}
                 onSave={handleSaveMetrics}
             />
