@@ -173,10 +173,31 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated, data, onAddMetric, onAddMe
         const element = document.getElementById('metric-table-container'); // 需要在 MetricTable 增加此 ID
         if (!element) return;
 
+        // 保存原始样式
+        const originalOverflow = element.style.overflow;
+        const originalHeight = element.style.height;
+
         try {
+            // 临时修改样式以展开所有内容
+            element.style.overflow = 'visible';
+            element.style.height = 'auto';
+
             const canvas = await html2canvas(element, {
                 backgroundColor: '#ffffff',
-                scale: 2 // 提高清晰度
+                scale: 2, // 提高清晰度
+                windowWidth: element.scrollWidth,
+                windowHeight: element.scrollHeight,
+                height: element.scrollHeight,
+                width: element.scrollWidth,
+                onclone: (clonedDoc) => {
+                    // 确保克隆的元素也是展开的
+                    const clonedElement = clonedDoc.getElementById('metric-table-container');
+                    if (clonedElement) {
+                        clonedElement.style.overflow = 'visible';
+                        clonedElement.style.height = 'auto';
+                        clonedElement.style.maxHeight = 'none';
+                    }
+                }
             });
             
             const link = document.createElement('a');
@@ -186,6 +207,10 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated, data, onAddMetric, onAddMe
         } catch (error) {
             console.error('Export image failed:', error);
             alert('导出图片失败，请重试');
+        } finally {
+            // 恢复原始样式
+            element.style.overflow = originalOverflow;
+            element.style.height = originalHeight;
         }
     };
 
