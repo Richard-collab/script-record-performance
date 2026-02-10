@@ -12,6 +12,7 @@ import type { AnalyticsData } from '../types/analytics';
 import * as XLSX from 'xlsx';
 import html2canvas from 'html2canvas';
 import QRCode from "react-qr-code";
+import dayjs from 'dayjs';
 
 interface HeaderProps {
     lastUpdated: string;
