@@ -1,18 +1,16 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { Box, Typography, Button, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, ListItemText, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Tooltip, Snackbar, Alert } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Typography, Button, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, ListItemText, Snackbar, Alert } from '@mui/material';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import ImageIcon from '@mui/icons-material/Image';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import type { AnalyticsData } from '../types/analytics';
 import * as XLSX from 'xlsx';
 import html2canvas from 'html2canvas';
 import QRCode from "react-qr-code";
 import dayjs from 'dayjs';
+import BackendDataEditor from './BackendDataEditor';
 
 interface HeaderProps {
     lastUpdated: string;
@@ -21,25 +19,12 @@ interface HeaderProps {
     onAddMetrics?: (rows: { label: string; baselineValue: string; comparisonValue: string }[]) => void;
 }
 
-interface BulkMetricRow {
-    id: string;
-    label: string;
-    baselineValue: string;
-    comparisonValue: string;
-}
-
 const Header: React.FC<HeaderProps> = ({ lastUpdated, data, onAddMetric, onAddMetrics }) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [editorOpen, setEditorOpen] = useState(false);
     const [shareDialogOpen, setShareDialogOpen] = useState(false);
-    const [metricLabel, setMetricLabel] = useState('');
-    const [baselineValue, setBaselineValue] = useState('');
-    const [comparisonValue, setComparisonValue] = useState('');
-    const [bulkRows, setBulkRows] = useState<BulkMetricRow[]>([]);
-    const [bulkText, setBulkText] = useState('');
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [shareUrl, setShareUrl] = useState('');
-    const rowIdRef = useRef(1);
     const open = Boolean(anchorEl);
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -214,119 +199,19 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated, data, onAddMetric, onAddMe
         }
     };
 
-    // 后程数据编辑相关
-    const handleOpenEditDialog = () => {
-        setEditDialogOpen(true);
-        if (bulkRows.length === 0) {
-            setBulkRows([createEmptyRow()]);
-        }
+    const handleOpenEditor = () => {
+        setEditorOpen(true);
     };
 
-    const handleCloseEditDialog = () => {
-        setEditDialogOpen(false);
-        setMetricLabel('');
-        setBaselineValue('');
-        setComparisonValue('');
-        setBulkRows([]);
-        setBulkText('');
-    };
-
-    const handleAddMetric = () => {
-        if (!metricLabel.trim() || !baselineValue.trim() || !comparisonValue.trim()) {
-            return;
-        }
-        if (onAddMetric) {
-            onAddMetric(metricLabel.trim(), baselineValue.trim(), comparisonValue.trim());
-        }
-        handleCloseEditDialog();
-    };
-
-    const handleAddRow = () => {
-        setBulkRows(prev => [...prev, createEmptyRow()]);
-    };
-
-    const handleRemoveRow = (rowId: string) => {
-        setBulkRows(prev => prev.filter(row => row.id !== rowId));
-    };
-
-    const handleRowChange = (rowId: string, field: keyof BulkMetricRow, value: string) => {
-        setBulkRows(prev => prev.map(row => (row.id === rowId ? { ...row, [field]: value } : row)));
-    };
-
-    const parseClipboardRows = (text: string): BulkMetricRow[] => {
-        const lines = text
-            .split(/\r?\n/)
-            .map(line => line.trim())
-            .filter(Boolean);
-
-        return lines.map(line => {
-            const cols = line.includes('\t') ? line.split('\t') : line.split(',');
-            const [label = '', baselineValue = '', comparisonValue = ''] = cols.map(col => col.trim());
-            return {
-                id: `row-${rowIdRef.current++}`,
-                label,
-                baselineValue,
-                comparisonValue
-            };
-        });
-    };
-
-    const createEmptyRow = (): BulkMetricRow => ({
-        id: `row-${rowIdRef.current++}`,
-        label: '',
-        baselineValue: '',
-        comparisonValue: ''
-    });
-
-    const handlePasteFromClipboard = async () => {
-        try {
-            const text = await navigator.clipboard.readText();
-            setBulkText(text);
-            // Optional: auto parse? Let's just fill the text area for user review
-        } catch (err) {
-            console.error('Failed to read clipboard', err);
-            alert('无法读取剪贴板，请手动粘贴');
-        }
-    };
-
-    const handleParseBulkText = () => {
-        const parsedRows = parseClipboardRows(bulkText);
-        if (parsedRows.length === 0) {
-            alert('未识别到可用数据');
-            return;
-        }
-        setBulkRows([...parsedRows, createEmptyRow()]);
-    };
-
-    const handleClearRows = () => {
-        setBulkRows([createEmptyRow()]);
-    };
-
-    const handleBulkAddMetrics = () => {
-        const rowsToAdd = bulkRows
-            .map(row => ({
-                label: row.label.trim(),
-                baselineValue: row.baselineValue.trim(),
-                comparisonValue: row.comparisonValue.trim()
-            }))
-            .filter(row => row.label && row.baselineValue && row.comparisonValue);
-
-        if (rowsToAdd.length === 0) {
-            return;
-        }
+    const handleSaveMetrics = (metrics: { label: string; baselineValue: string; comparisonValue: string }[]) => {
+        if (metrics.length === 0) return;
 
         if (onAddMetrics) {
-            onAddMetrics(rowsToAdd);
+            onAddMetrics(metrics);
         } else if (onAddMetric) {
-            rowsToAdd.forEach(row => onAddMetric(row.label, row.baselineValue, row.comparisonValue));
+            metrics.forEach(row => onAddMetric(row.label, row.baselineValue, row.comparisonValue));
         }
-
-        handleCloseEditDialog();
     };
-
-    const isBulkAddDisabled = useMemo(() => {
-        return !bulkRows.some(row => row.label.trim() && row.baselineValue.trim() && row.comparisonValue.trim());
-    }, [bulkRows]);
 
     return (
         <>
@@ -390,7 +275,7 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated, data, onAddMetric, onAddMe
                     <Button
                         variant="contained"
                         size="small"
-                        onClick={handleOpenEditDialog}
+                        onClick={handleOpenEditor}
                         disabled={!data}
                     >
                         后程数据编辑
@@ -422,151 +307,11 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated, data, onAddMetric, onAddMe
                 </DialogActions>
             </Dialog>
 
-            <Dialog open={editDialogOpen} onClose={handleCloseEditDialog} maxWidth="md" fullWidth>
-                <DialogTitle>后程数据编辑（可批量导入）</DialogTitle>
-                <DialogContent>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-                        <Typography variant="body2" color="text.secondary">
-                            支持 CSV/TSV 粘贴（字段名、话术A指标、话术B指标），也可直接在表格内编辑。
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                            <Button
-                                variant="outlined"
-                                size="small"
-                                startIcon={<ContentPasteIcon />}
-                                onClick={handlePasteFromClipboard}
-                            >
-                                粘贴剪贴板
-                            </Button>
-                            <Button
-                                variant="outlined"
-                                size="small"
-                                onClick={handleParseBulkText}
-                            >
-                                解析文本
-                            </Button>
-                            <Button
-                                variant="outlined"
-                                size="small"
-                                startIcon={<AddIcon />}
-                                onClick={handleAddRow}
-                            >
-                                添加一行
-                            </Button>
-                            <Button
-                                variant="text"
-                                size="small"
-                                onClick={handleClearRows}
-                            >
-                                清空
-                            </Button>
-                        </Box>
-                        <TextField
-                            label="批量文本（每行: 字段名,话术A指标,话术B指标）"
-                            value={bulkText}
-                            onChange={(e) => setBulkText(e.target.value)}
-                            placeholder={"后程核验通过率, 12.3%, 10.8%\n复拨成功率\t23.1%\t21.4%"}
-                            minRows={3}
-                            multiline
-                            fullWidth
-                            size="small"
-                        />
-                        <TableContainer sx={{ border: '1px solid #e0e0e0', borderRadius: 1 }}>
-                            <Table size="small">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell sx={{ width: '36%' }}>字段名</TableCell>
-                                        <TableCell sx={{ width: '24%' }}>话术A指标</TableCell>
-                                        <TableCell sx={{ width: '24%' }}>话术B指标</TableCell>
-                                        <TableCell sx={{ width: '16%' }} align="center">操作</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {bulkRows.map(row => (
-                                        <TableRow key={row.id}>
-                                            <TableCell>
-                                                <TextField
-                                                    value={row.label}
-                                                    onChange={(e) => handleRowChange(row.id, 'label', e.target.value)}
-                                                    size="small"
-                                                    placeholder="例如：后程核验通过率"
-                                                    fullWidth
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <TextField
-                                                    value={row.baselineValue}
-                                                    onChange={(e) => handleRowChange(row.id, 'baselineValue', e.target.value)}
-                                                    size="small"
-                                                    placeholder="例如：12.3%"
-                                                    fullWidth
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <TextField
-                                                    value={row.comparisonValue}
-                                                    onChange={(e) => handleRowChange(row.id, 'comparisonValue', e.target.value)}
-                                                    size="small"
-                                                    placeholder="例如：10.8%"
-                                                    fullWidth
-                                                />
-                                            </TableCell>
-                                            <TableCell align="center">
-                                                <Tooltip title="删除">
-                                                    <IconButton size="small" onClick={() => handleRemoveRow(row.id)}>
-                                                        <DeleteOutlineIcon fontSize="small" />
-                                                    </IconButton>
-                                                </Tooltip>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                        <Box sx={{ display: 'flex', gap: 2 }}>
-                            <TextField
-                                label="字段名"
-                                value={metricLabel}
-                                onChange={(e) => setMetricLabel(e.target.value)}
-                                fullWidth
-                                size="small"
-                            />
-                            <TextField
-                                label="话术A指标"
-                                value={baselineValue}
-                                onChange={(e) => setBaselineValue(e.target.value)}
-                                fullWidth
-                                size="small"
-                            />
-                            <TextField
-                                label="话术B指标"
-                                value={comparisonValue}
-                                onChange={(e) => setComparisonValue(e.target.value)}
-                                fullWidth
-                                size="small"
-                            />
-                            <Button
-                                variant="outlined"
-                                onClick={handleAddMetric}
-                                disabled={!metricLabel.trim() || !baselineValue.trim() || !comparisonValue.trim()}
-                                sx={{ whiteSpace: 'nowrap' }}
-                            >
-                                追加
-                            </Button>
-                        </Box>
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseEditDialog}>取消</Button>
-                    <Button
-                        variant="contained"
-                        onClick={handleBulkAddMetrics}
-                        disabled={isBulkAddDisabled}
-                    >
-                        导入
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            <BackendDataEditor
+                open={editorOpen}
+                onClose={() => setEditorOpen(false)}
+                onSave={handleSaveMetrics}
+            />
 
             <Snackbar
                 open={snackbarOpen}
