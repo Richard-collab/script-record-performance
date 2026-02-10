@@ -30,7 +30,6 @@ interface BulkMetricRow {
 
 const Header: React.FC<HeaderProps> = ({ lastUpdated, data, onAddMetric, onAddMetrics }) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [imageDialogOpen, setImageDialogOpen] = useState(false);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [shareDialogOpen, setShareDialogOpen] = useState(false);
     const [metricLabel, setMetricLabel] = useState('');
@@ -169,20 +168,36 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated, data, onAddMetric, onAddMe
     };
 
     // 图片导出功能
-    const handleImageExportClick = () => {
+    const handleImageExportClick = async () => {
         handleClose();
-        setImageDialogOpen(true);
-    };
-
-    const handleExportImage = async (mode: 'single' | 'multiple') => {
-        setImageDialogOpen(false);
         const element = document.getElementById('metric-table-container'); // 需要在 MetricTable 增加此 ID
         if (!element) return;
 
+        // 保存原始样式
+        const originalOverflow = element.style.overflow;
+        const originalHeight = element.style.height;
+
         try {
+            // 临时修改样式以展开所有内容
+            element.style.overflow = 'visible';
+            element.style.height = 'auto';
+
             const canvas = await html2canvas(element, {
                 backgroundColor: '#ffffff',
-                scale: 2 // 提高清晰度
+                scale: 2, // 提高清晰度
+                windowWidth: element.scrollWidth,
+                windowHeight: element.scrollHeight,
+                height: element.scrollHeight,
+                width: element.scrollWidth,
+                onclone: (clonedDoc) => {
+                    // 确保克隆的元素也是展开的
+                    const clonedElement = clonedDoc.getElementById('metric-table-container');
+                    if (clonedElement) {
+                        clonedElement.style.overflow = 'visible';
+                        clonedElement.style.height = 'auto';
+                        clonedElement.style.maxHeight = 'none';
+                    }
+                }
             });
             
             const link = document.createElement('a');
@@ -192,6 +207,10 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated, data, onAddMetric, onAddMe
         } catch (error) {
             console.error('Export image failed:', error);
             alert('导出图片失败，请重试');
+        } finally {
+            // 恢复原始样式
+            element.style.overflow = originalOverflow;
+            element.style.height = originalHeight;
         }
     };
 
@@ -379,32 +398,6 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated, data, onAddMetric, onAddMe
                 </Box>
             </Box>
 
-            {/* 图片导出选项对话框 */}
-            <Dialog open={imageDialogOpen} onClose={() => setImageDialogOpen(false)}>
-                <DialogTitle>选择图片导出方式</DialogTitle>
-                <DialogContent>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pt: 1 }}>
-                        <Button
-                            variant="outlined"
-                            onClick={() => handleExportImage('single')}
-                            sx={{ justifyContent: 'flex-start', py: 1.5 }}
-                        >
-                            导出为一张图片
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            onClick={() => handleExportImage('multiple')}
-                            sx={{ justifyContent: 'flex-start', py: 1.5 }}
-                        >
-                            导出为三张图片
-                        </Button>
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setImageDialogOpen(false)}>取消</Button>
-                </DialogActions>
-            </Dialog>
-            
             {/* 分享二维码弹窗 */}
             <Dialog open={shareDialogOpen} onClose={handleCloseShareDialog}>
                 <DialogTitle sx={{ textAlign: 'center' }}>分享页面</DialogTitle>
