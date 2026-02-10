@@ -15,6 +15,7 @@
     "@mui/material": "^7.3.7",
     "@mui/x-date-pickers": "^8.27.0",
     "dayjs": "^1.11.19",
+    "diff": "^8.0.3",
     "html2canvas": "^1.4.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -22,7 +23,9 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@types/bun": "latest",
+    "@types/diff": "^8.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/xlsx": "^0.0.36",
