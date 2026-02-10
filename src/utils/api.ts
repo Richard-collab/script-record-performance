@@ -495,9 +495,9 @@ export async function fetchAnalyticsData(
 
     // 处理基准组数据：根据选择的任务进行聚合或筛选
     let baseline: ScriptTaskData | undefined;
-    const baselineTasks = Array.isArray(baselineTask) ? baselineTask : [baselineTask];
+    const baselineTasks = (!baselineTask) ? [] : (Array.isArray(baselineTask) ? baselineTask : [baselineTask]);
     
-    if (baselineTasks.length === 0 || (baselineTasks.length === 1 && baselineTasks[0] === '')) {
+    if (baselineTasks.length === 0 || (baselineTasks.length === 1 && !baselineTasks[0])) {
       // 未选择或空字符串：聚合所有任务
       baseline = aggregateTaskData(baselineData);
     } else if (baselineTasks.length === 1) {
@@ -511,9 +511,9 @@ export async function fetchAnalyticsData(
 
     // 处理实验组数据：根据选择的任务进行聚合或筛选
     let experiment: ScriptTaskData | undefined;
-    const experimentTasks = Array.isArray(experimentTask) ? experimentTask : [experimentTask];
+    const experimentTasks = (!experimentTask) ? [] : (Array.isArray(experimentTask) ? experimentTask : [experimentTask]);
     
-    if (experimentTasks.length === 0 || (experimentTasks.length === 1 && experimentTasks[0] === '')) {
+    if (experimentTasks.length === 0 || (experimentTasks.length === 1 && !experimentTasks[0])) {
       // 未选择或空字符串：聚合所有任务
       experiment = aggregateTaskData(experimentData);
     } else if (experimentTasks.length === 1) {
@@ -620,21 +620,65 @@ export async function fetchAnalyticsData(
       }
     ];
 
-    // 构建语料命中率指标
-    const hitRateMetrics: AnalyticsMetric[] = Object.keys({ ...baselineHitRate, ...experimentHitRate })
-      .filter(key => key !== '') // 过滤空key
-      .map(key => {
-        const baseVal = (baselineHitRate[key] || 0) * 100;
-        const expVal = (experimentHitRate[key] || 0) * 100;
-        return {
-          id: `hit_${key}`,
-          label: key,
-          baselineValue: `${baseVal.toFixed(2)}%`,
-          comparisonValue: `${expVal.toFixed(2)}%`,
-          diffValue: calculateAbsoluteDiff(baseVal, expVal) + '%',
-          diffDirection: expVal > baseVal ? 'up' : expVal < baseVal ? 'down' : 'neutral'
-        };
-      });
+    // 定义重点语料的漏斗顺序
+    const funnelOrder = [
+      '问候语',
+      '开场白',
+      '引导打开信任度表',
+      '引导展示公众号',
+      '引导进入申请页面注册',
+      '引导下载app',
+      '引导报名'
+    ];
+
+    // 构建语料命中率指标（按漏斗顺序）
+    const allKeys = Object.keys({ ...baselineHitRate, ...experimentHitRate }).filter(key => key !== '');
+    
+    // 将keys按照漏斗顺序排序，未在漏斗顺序中的key放在最后
+    const sortedKeys = [
+      ...funnelOrder.filter(key => allKeys.includes(key)),
+      ...allKeys.filter(key => !funnelOrder.includes(key))
+    ];
+
+    const hitRateMetrics: AnalyticsMetric[] = sortedKeys.map((key, index) => {
+      const baseVal = (baselineHitRate[key] || 0) * 100;
+      const expVal = (experimentHitRate[key] || 0) * 100;
+      
+      // 计算纵向转化率（相对于上一个环节的转化率）
+      let baseConversionRate = '';
+      let expConversionRate = '';
+      
+      if (index === 0) {
+        // 第一个环节显示 100%
+        baseConversionRate = ' [100%]';
+        expConversionRate = ' [100%]';
+      } else if (index > 0) {
+        const prevKey = sortedKeys[index - 1];
+        const prevBaseVal = (baselineHitRate[prevKey] || 0) * 100;
+        const prevExpVal = (experimentHitRate[prevKey] || 0) * 100;
+        
+        // 基准组：当前环节命中率 / 上一环节命中率
+        if (prevBaseVal > 0) {
+          const convRate = (baseVal / prevBaseVal * 100).toFixed(2);
+          baseConversionRate = ` [${convRate}%]`;
+        }
+        
+        // 实验组：当前环节命中率 / 上一环节命中率
+        if (prevExpVal > 0) {
+          const convRate = (expVal / prevExpVal * 100).toFixed(2);
+          expConversionRate = ` [${convRate}%]`;
+        }
+      }
+      
+      return {
+        id: `hit_${key}`,
+        label: key,
+        baselineValue: `${baseVal.toFixed(2)}%${baseConversionRate}`,
+        comparisonValue: `${expVal.toFixed(2)}%${expConversionRate}`,
+        diffValue: calculateAbsoluteDiff(baseVal, expVal) + '%',
+        diffDirection: expVal > baseVal ? 'up' : expVal < baseVal ? 'down' : 'neutral'
+      };
+    });
 
     // 构建语料挂机率指标
     const hangupRateMetrics: AnalyticsMetric[] = Object.keys({ ...baselineHangupRate, ...experimentHangupRate })

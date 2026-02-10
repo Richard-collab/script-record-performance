@@ -1,278 +1,145 @@
-import React from 'react';
-import { Box, Paper, Typography } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, IconButton } from '@mui/material';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import EditIcon from '@mui/icons-material/Edit';
+import CheckIcon from '@mui/icons-material/Check';
+import CancelIcon from '@mui/icons-material/Cancel';
 import type { AnalyticsData, AnalyticsMetric } from '../types/analytics';
 
 interface MetricTableProps {
     data: AnalyticsData;
+    onMetricUpdate?: (
+        groupId: string,
+        metricId: string,
+        field: 'baselineValue' | 'comparisonValue',
+        newValue: string
+    ) => void;
 }
 
-interface MetricCardProps {
-    title: string;
-    data: AnalyticsData;
-    side: 'baseline' | 'comparison';
-    showDiff?: boolean;
+// 可编辑单元格组件
+interface EditableCellProps {
+    value: string;
+    onSave: (newValue: string) => void;
+    align?: 'left' | 'center' | 'right';
+    sx?: any;
 }
 
-// 单个指标行组件
-const MetricRow: React.FC<{ 
-    label: string; 
-    value: string; 
-    diffValue?: string;
-    diffDirection?: 'up' | 'down' | 'neutral';
-    showDiff?: boolean;
-}> = ({ label, value, diffValue, diffDirection, showDiff }) => {
-    const getDiffColor = () => {
-        if (diffDirection === 'up') return '#4caf50';
-        if (diffDirection === 'down') return '#f44336';
-        return '#757575';
+const EditableCell: React.FC<EditableCellProps> = ({ value, onSave, align = 'center', sx }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [editValue, setEditValue] = useState(value);
+
+    // 提取主值（用于编辑）
+    const extractMainValue = (val: string): string => {
+        const match = val.match(/^([^[]+)/);
+        return match ? match[1].trim() : val;
+    };
+
+    const handleStartEdit = () => {
+        // 只编辑主值部分
+        const mainValue = extractMainValue(value);
+        setEditValue(mainValue);
+        setIsEditing(true);
+    };
+
+    const handleSave = () => {
+        const mainValue = extractMainValue(value);
+        if (editValue !== mainValue) {
+            // 传递编辑后的主值，让父组件处理衰减率的重新计算
+            onSave(editValue);
+        }
+        setIsEditing(false);
+    };
+
+    const handleCancel = () => {
+        setEditValue(extractMainValue(value));
+        setIsEditing(false);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            handleSave();
+        } else if (e.key === 'Escape') {
+            handleCancel();
+        }
+    };
+
+    // 解析并显示值（处理 [xx%] 格式）
+    const renderValue = (val: string) => {
+        const match = val.match(/^(.+?)\s*\[(.+?)\]$/);
+        if (match) {
+            return (
+                <span>
+                    {match[1]} <strong>[{match[2]}]</strong>
+                </span>
+            );
+        }
+        return val;
     };
 
     return (
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 1.5, borderBottom: '1px solid #f0f0f0' }}>
-            <Typography variant="body2" sx={{ color: 'text.primary' }} title={label}>
-                {label}
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    {value}
-                </Typography>
-                {showDiff && diffValue && diffValue !== '--' && (
-                    <Typography 
-                        variant="caption" 
-                        sx={{ 
-                            color: getDiffColor(),
-                            fontWeight: 600,
-                            minWidth: 70,
-                            textAlign: 'right',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.3
-                        }}
-                    >
-                        {diffDirection === 'up' && <ArrowUpwardIcon sx={{ fontSize: '0.875rem' }} />}
-                        {diffDirection === 'down' && <ArrowDownwardIcon sx={{ fontSize: '0.875rem' }} />}
-                        【{diffValue}】
-                    </Typography>
-                )}
-            </Box>
-        </Box>
-    );
-};
-
-// 详情列表组件（用于语料命中率等）
-const DetailList: React.FC<{ 
-    metrics: AnalyticsMetric[]; 
-    side: 'baseline' | 'comparison';
-    showDiff?: boolean;
-}> = ({ metrics, side, showDiff }) => {
-    return (
-        <Box sx={{ pl: 2 }}>
-            {metrics.map((metric) => (
-                <Box 
-                    key={metric.id}
-                    sx={{ 
-                        py: 0.5,
-                        display: 'flex'
-                    }}
-                >
-                    <Typography 
-                        variant="body2" 
-                        sx={{ 
-                            color: 'text.secondary',
-                            fontSize: '0.875rem',
-                            width: '200px',
-                            flexShrink: 0
-                        }}
-                        title={metric.label}
-                    >
-                        {metric.label}:
-                    </Typography>
-                    <Box sx={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
-                        <Typography 
-                            variant="body2" 
-                            sx={{ 
-                                color: 'text.primary',
-                                fontSize: '0.875rem',
-                                fontWeight: 500
-                            }}
-                        >
-                            {side === 'baseline' ? metric.baselineValue : metric.comparisonValue}
-                        </Typography>
-                    </Box>
+        <TableCell align={align} sx={{ ...sx, position: 'relative' }}>
+            {isEditing ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'center' }}>
+                    <TextField
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        size="small"
+                        autoFocus
+                        sx={{ width: 120 }}
+                        placeholder="输入主值"
+                    />
+                    <IconButton size="small" color="primary" onClick={handleSave}>
+                        <CheckIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton size="small" onClick={handleCancel}>
+                        <CancelIcon fontSize="small" />
+                    </IconButton>
                 </Box>
-            ))}
-        </Box>
-    );
-};
-
-// 单个卡片组件
-const MetricCard: React.FC<MetricCardProps> = ({ title, data, side, showDiff = false }) => {
-    const coreGroup = data.groups.find(g => g.id === 'core');
-    const otherGroups = data.groups.filter(g => g.id !== 'core');
-
-    const getValue = (metric: AnalyticsMetric) => 
-        side === 'baseline' ? metric.baselineValue : metric.comparisonValue;
-
-    return (
-        <Paper elevation={0} sx={{ p: 3, height: 'fit-content', border: '1px solid #e0e0e0', overflowY: 'auto' }}>
-            {/* 标题 */}
-            <Box sx={{ 
-                bgcolor: '#000000', 
-                color: 'white', 
-                py: 1.5, 
-                px: 2, 
-                mb: 3,
-                mx: -3,
-                mt: -3
-            }}>
-                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, wordBreak: 'break-word' }} title={title}>
-                    {title}
-                </Typography>
-            </Box>
-
-            {/* 核心指标 */}
-            {coreGroup && (
-                <Box sx={{ mb: 3 }}>
-                    {coreGroup.metrics.map(metric => (
-                        <MetricRow 
-                            key={metric.id}
-                            label={metric.label}
-                            value={getValue(metric)}
-                            diffValue={metric.diffValue}
-                            diffDirection={metric.diffDirection}
-                            showDiff={showDiff}
-                        />
-                    ))}
+            ) : (
+                <Box 
+                    sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        gap: 1,
+                        cursor: 'pointer',
+                        '&:hover .edit-icon': {
+                            opacity: 1
+                        }
+                    }}
+                    onDoubleClick={handleStartEdit}
+                >
+                    <span>{renderValue(value)}</span>
+                    <IconButton 
+                        className="edit-icon"
+                        size="small" 
+                        onClick={handleStartEdit}
+                        sx={{ 
+                            opacity: 0, 
+                            transition: 'opacity 0.2s',
+                            padding: '2px'
+                        }}
+                    >
+                        <EditIcon sx={{ fontSize: '0.9rem' }} />
+                    </IconButton>
                 </Box>
             )}
-
-            {/* 详情数据 */}
-            {otherGroups.map(group => (
-                <Box key={group.id} sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'text.primary' }} title={group.title}>
-                        {group.title}
-                    </Typography>
-                    <DetailList metrics={group.metrics} side={side} showDiff={showDiff} />
-                </Box>
-            ))}
-        </Paper>
+        </TableCell>
     );
 };
 
-// 差异值卡片组件
-const DiffCard: React.FC<{ data: AnalyticsData }> = ({ data }) => {
-    const coreGroup = data.groups.find(g => g.id === 'core');
-    const otherGroups = data.groups.filter(g => g.id !== 'core');
+const MetricTable: React.FC<MetricTableProps> = ({ data, onMetricUpdate }) => {
+    // 使用数据中的标题，如果没有则使用默认值
+    const baselineTitle = data.baselineTitle || '包名 A';
+    const comparisonTitle = data.comparisonTitle || '包名 B';
 
     const getDiffColor = (direction?: 'up' | 'down' | 'neutral') => {
         if (direction === 'up') return '#4caf50';
         if (direction === 'down') return '#f44336';
         return '#757575';
     };
-
-    return (
-        <Paper elevation={0} sx={{ p: 3, height: 'fit-content', border: '1px solid #e0e0e0', overflowY: 'auto' }}>
-            {/* 标题 */}
-            <Box sx={{ 
-                bgcolor: '#ff9800', 
-                color: 'white', 
-                py: 1.5, 
-                px: 2, 
-                mb: 3,
-                mx: -3,
-                mt: -3
-            }}>
-                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>
-                    差异值 (B - A)
-                </Typography>
-            </Box>
-
-            {/* 核心指标差异 */}
-            {coreGroup && (
-                <Box sx={{ mb: 3 }}>
-                    {coreGroup.metrics.map(metric => (
-                        <Box key={metric.id} sx={{ display: 'flex', justifyContent: 'space-between', py: 1.5, borderBottom: '1px solid #f0f0f0' }}>
-                            <Typography variant="body2" sx={{ color: 'text.primary' }} title={metric.label}>
-                                {metric.label}
-                            </Typography>
-                            <Typography 
-                                variant="body2" 
-                                sx={{ 
-                                    color: getDiffColor(metric.diffDirection),
-                                    fontWeight: 600,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 0.5
-                                }}
-                            >
-                                {metric.diffDirection === 'up' && <ArrowUpwardIcon sx={{ fontSize: '0.875rem' }} />}
-                                {metric.diffDirection === 'down' && <ArrowDownwardIcon sx={{ fontSize: '0.875rem' }} />}
-                                {metric.diffValue || '--'}
-                            </Typography>
-                        </Box>
-                    ))}
-                </Box>
-            )}
-
-            {/* 详情数据差异 */}
-            {otherGroups.map(group => (
-                <Box key={group.id} sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'text.primary' }} title={group.title}>
-                        {group.title}
-                    </Typography>
-                    <Box sx={{ pl: 2 }}>
-                        {group.metrics.map(metric => (
-                            <Box 
-                                key={metric.id}
-                                sx={{ 
-                                    py: 0.5,
-                                    display: 'flex'
-                                }}
-                            >
-                                <Typography 
-                                    variant="body2" 
-                                    sx={{ 
-                                        fontSize: '0.875rem',
-                                        color: 'text.secondary',
-                                        width: '200px',
-                                        flexShrink: 0
-                                    }}
-                                    title={metric.label}
-                                >
-                                    {metric.label}:
-                                </Typography>
-                                <Box sx={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                                    <Typography 
-                                        variant="body2" 
-                                        sx={{ 
-                                            fontSize: '0.875rem',
-                                            color: getDiffColor(metric.diffDirection),
-                                            fontWeight: 600,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: 0.3
-                                        }}
-                                    >
-                                        {metric.diffDirection === 'up' && <ArrowUpwardIcon sx={{ fontSize: '0.75rem' }} />}
-                                        {metric.diffDirection === 'down' && <ArrowDownwardIcon sx={{ fontSize: '0.75rem' }} />}
-                                        {metric.diffValue || '--'}
-                                    </Typography>
-                                </Box>
-                            </Box>
-                        ))}
-                    </Box>
-                </Box>
-            ))}
-        </Paper>
-    );
-};
-
-const MetricTable: React.FC<MetricTableProps> = ({ data }) => {
-    // 使用数据中的标题，如果没有则使用默认值
-    const baselineTitle = data.baselineTitle || '话术 A (基准)';
-    const comparisonTitle = data.comparisonTitle || '话术 B (对比)';
 
     return (
         <Box 
@@ -282,35 +149,140 @@ const MetricTable: React.FC<MetricTableProps> = ({ data }) => {
                 overflow: 'auto', 
                 p: 3, 
                 bgcolor: 'background.default',
-                display: 'flex',
-                gap: 2,
                 height: '100%'
             }}
         >
-            {/* 左侧基准卡片 */}
-            <Box sx={{ flex: 1, minWidth: 0 }} data-card-index="0">
-                <MetricCard 
-                    title={baselineTitle}
-                    data={data}
-                    side="baseline"
-                    showDiff={false}
-                />
-            </Box>
-
-            {/* 中间对比卡片 */}
-            <Box sx={{ flex: 1, minWidth: 0 }} data-card-index="1">
-                <MetricCard 
-                    title={comparisonTitle}
-                    data={data}
-                    side="comparison"
-                    showDiff={false}
-                />
-            </Box>
-
-            {/* 右侧差异卡片 */}
-            <Box sx={{ flex: 1, minWidth: 0 }} data-card-index="2">
-                <DiffCard data={data} />
-            </Box>
+            <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0' }}>
+                <Table sx={{ minWidth: 800 }}>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell 
+                                sx={{ 
+                                    fontWeight: 700, 
+                                    bgcolor: '#f5f5f5',
+                                    borderRight: '1px solid #e0e0e0',
+                                    minWidth: 200,
+                                    position: 'sticky',
+                                    left: 0,
+                                    zIndex: 2
+                                }}
+                            >
+                                指标名称
+                            </TableCell>
+                            <TableCell 
+                                align="center" 
+                                sx={{ 
+                                    fontWeight: 700, 
+                                    bgcolor: '#e3f2fd',
+                                    borderRight: '1px solid #e0e0e0',
+                                    minWidth: 150
+                                }}
+                            >
+                                {baselineTitle}
+                            </TableCell>
+                            <TableCell 
+                                align="center" 
+                                sx={{ 
+                                    fontWeight: 700, 
+                                    bgcolor: '#e8f5e9',
+                                    borderRight: '1px solid #e0e0e0',
+                                    minWidth: 150
+                                }}
+                            >
+                                {comparisonTitle}
+                            </TableCell>
+                            <TableCell 
+                                align="center" 
+                                sx={{ 
+                                    fontWeight: 700, 
+                                    bgcolor: '#fff3e0',
+                                    minWidth: 150
+                                }}
+                            >
+                                差异
+                            </TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {data.groups.map((group) => (
+                            <React.Fragment key={group.id}>
+                                {/* 组标题行 */}
+                                {group.id !== 'core' && (
+                                    <TableRow>
+                                        <TableCell 
+                                            colSpan={4} 
+                                            sx={{ 
+                                                bgcolor: '#fafafa', 
+                                                fontWeight: 600,
+                                                py: 1
+                                            }}
+                                        >
+                                            {group.title}
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                                {/* 指标行 */}
+                                {group.metrics.map((metric) => (
+                                    <TableRow 
+                                        key={metric.id}
+                                        sx={{ 
+                                            '&:hover': { bgcolor: '#f9f9f9' },
+                                            bgcolor: metric.isSubItem ? '#fcfcfc' : 'inherit'
+                                        }}
+                                    >
+                                        <TableCell 
+                                            sx={{ 
+                                                borderRight: '1px solid #e0e0e0',
+                                                pl: metric.isSubItem ? 4 : 2,
+                                                position: 'sticky',
+                                                left: 0,
+                                                bgcolor: 'inherit',
+                                                zIndex: 1
+                                            }}
+                                        >
+                                            {metric.label}
+                                        </TableCell>
+                                        <EditableCell
+                                            value={metric.baselineValue}
+                                            onSave={(newValue) => {
+                                                if (onMetricUpdate) {
+                                                    onMetricUpdate(group.id, metric.id, 'baselineValue', newValue);
+                                                }
+                                            }}
+                                            sx={{ borderRight: '1px solid #e0e0e0' }}
+                                        />
+                                        <EditableCell
+                                            value={metric.comparisonValue}
+                                            onSave={(newValue) => {
+                                                if (onMetricUpdate) {
+                                                    onMetricUpdate(group.id, metric.id, 'comparisonValue', newValue);
+                                                }
+                                            }}
+                                            sx={{ borderRight: '1px solid #e0e0e0' }}
+                                        />
+                                        <TableCell align="center">
+                                            <Box 
+                                                sx={{ 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    justifyContent: 'center',
+                                                    gap: 0.5,
+                                                    color: getDiffColor(metric.diffDirection),
+                                                    fontWeight: 600
+                                                }}
+                                            >
+                                                {metric.diffDirection === 'up' && <ArrowUpwardIcon sx={{ fontSize: '1rem' }} />}
+                                                {metric.diffDirection === 'down' && <ArrowDownwardIcon sx={{ fontSize: '1rem' }} />}
+                                                <span>{metric.diffValue || '--'}</span>
+                                            </Box>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </React.Fragment>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </Box>
     );
 };

@@ -7,6 +7,8 @@ export interface AnalyticsMetric {
     diffDirection?: 'up' | 'down' | 'neutral';
     diffPercentage?: string;
     isSubItem?: boolean;
+    // 漏斗转化率（相对于接通量）
+    funnelRate?: string;
 }
 
 export interface AnalyticsGroup {
