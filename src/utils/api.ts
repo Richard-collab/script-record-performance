@@ -70,19 +70,20 @@ const BASE_URL = "/api";
  * 发送请求并解析 JSON 的通用封装
  * * @param endpoint - API 路径 (例如 '/search')
  * @param params - URL查询参数对象
+ * @param baseUrl - 基础路径，默认为 BASE_URL
  * @returns 解析后的 JSON 数据
  * @throws {Error} 当 HTTP 状态码不是 2xx 时抛出异常
  */
-async function fetchClient<T>(endpoint: string, params?: URLSearchParams): Promise<T> {
+async function fetchClient<T>(endpoint: string, params?: URLSearchParams, baseUrl: string = BASE_URL): Promise<T> {
   // Handle relative BASE_URL (for proxy) vs Absolute (for direct access)
   let urlString: string;
-  if (BASE_URL.startsWith('http')) {
-      const url = new URL(endpoint, BASE_URL);
+  if (baseUrl.startsWith('http')) {
+      const url = new URL(endpoint, baseUrl);
       if (params) url.search = params.toString();
       urlString = url.toString();
   } else {
       // For relative paths (proxy), construct the string manually or use window.location
-      const base = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
+      const base = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
       const path = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
       urlString = `${base}${path}`;
       if (params) {
@@ -228,7 +229,7 @@ export async function getCorpusByScript(scriptName: string): Promise<CorpusData[
   params.append("script_name", scriptName);
 
   try {
-    const results = await fetchClient<CorpusData[]>('/getCorpusByScript', params);
+    const results = await fetchClient<CorpusData[]>('/getCorpusByScript', params, '/corpus');
     console.log(`✅ GetCorpusByScript Successful: Found ${results.length} records.`);
     return results;
   } catch (error) {
