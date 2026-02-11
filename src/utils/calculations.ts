@@ -56,7 +56,7 @@ export const calculateDifference = (
     }
 
     // 格式化差异值
-    const diffValue = diff >= 0 ? `+${diff.toFixed(0)}` : diff.toFixed(0);
+    const diffValue = diff >= 0 ? `+${diff.toFixed(2)}` : diff.toFixed(2);
     const diffPercentage = percentage >= 0 
         ? `+${percentage.toFixed(1)}%` 
         : `${percentage.toFixed(1)}%`;
