@@ -210,8 +210,12 @@ export async function getInfoByScript(date: string, scriptNames: string | string
     const results = await fetchClient<ScriptTaskData[]>('/getInfoByScript', params);
     
     console.log("📜 Raw Response:", results);
-    console.log(`✅ GetInfoByScript Successful: Found ${results.length} records.`);
-    return results; // Return the results
+
+    // 过滤掉 template_name 为 "未找到对应数据" 的数据
+    const filteredResults = results.filter(item => item.template_name !== '未找到对应数据');
+
+    console.log(`✅ GetInfoByScript Successful: Found ${results.length} records. Filtered to ${filteredResults.length}.`);
+    return filteredResults; // Return the results
   } catch (error) {
     // 错误处理
     console.error("Error fetching info by script:", error);
