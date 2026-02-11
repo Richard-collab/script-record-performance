@@ -252,7 +252,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onSearch, initialFilters, onS
                     <Typography variant="body2" fontWeight="bold" gutterBottom>
                         时间范围
                     </Typography>
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
                          <DatePicker
                             value={startDate}
                             onChange={(newValue) => setStartDate(newValue)}
