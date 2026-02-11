@@ -176,7 +176,7 @@ const MetricTable: React.FC<MetricTableProps> = ({ data, onMetricUpdate }) => {
                                     minWidth: 150
                                 }}
                             >
-                                {baselineTitle}
+                                {baselineTitle} - A
                             </TableCell>
                             <TableCell 
                                 align="center" 
@@ -187,7 +187,7 @@ const MetricTable: React.FC<MetricTableProps> = ({ data, onMetricUpdate }) => {
                                     minWidth: 150
                                 }}
                             >
-                                {comparisonTitle}
+                                {comparisonTitle} - B
                             </TableCell>
                             <TableCell 
                                 align="center" 
