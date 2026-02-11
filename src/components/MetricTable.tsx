@@ -150,8 +150,8 @@ const MetricTable: React.FC<MetricTableProps> = ({ data, onMetricUpdate }) => {
                 bgcolor: 'background.default',
             }}
         >
-            <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0' }}>
-                <Table sx={{ minWidth: 800 }}>
+            <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0', maxHeight:'vh' }}>
+                <Table sx={{ minWidth: 800}} stickyHeader aria-label='sticky table'>
                     <TableHead>
                         <TableRow>
                             <TableCell 
@@ -197,7 +197,7 @@ const MetricTable: React.FC<MetricTableProps> = ({ data, onMetricUpdate }) => {
                                     minWidth: 150
                                 }}
                             >
-                                差异
+                                差异 B-A
                             </TableCell>
                         </TableRow>
                     </TableHead>

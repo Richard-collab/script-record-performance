@@ -234,7 +234,7 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated, data, customMetrics, onAdd
                         话术数据统计看板2.0
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                        最后更新: {lastUpdated}
+                        当日数据约半小时同步一次
                     </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 2 }}>

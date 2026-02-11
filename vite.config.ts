@@ -17,5 +17,8 @@ export default defineConfig({
           rewrite: (path) => path.replace(/^\/corpus/, '')
         }
     }
+  },
+  build: {
+    cssCodeSplit: true
   }
 })

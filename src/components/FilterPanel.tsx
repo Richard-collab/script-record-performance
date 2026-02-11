@@ -258,12 +258,15 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onSearch, initialFilters, onS
                             value={startDate}
                             onChange={(newValue) => setStartDate(newValue)}
                             slotProps={{ textField: { size: 'small' } }}
+                            format="YYYY/MM/DD"
+                            
                          />
                          <Typography>-</Typography>
                          <DatePicker
                             value={endDate}
                             onChange={(newValue) => setEndDate(newValue)}
                             slotProps={{ textField: { size: 'small' } }}
+                            format="YYYY/MM/DD"
                          />
                     </Box>
                 </Box>
@@ -300,7 +303,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onSearch, initialFilters, onS
                     />
 
                     <Typography variant="body2" fontWeight="bold" gutterBottom>
-                        任务 ID（可多选）
+                        任务名称（可多选）
                     </Typography>
                     <Autocomplete
                         multiple
@@ -365,7 +368,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onSearch, initialFilters, onS
                     />
 
                     <Typography variant="body2" fontWeight="bold" gutterBottom>
-                        任务 ID（可多选）
+                        任务名称（可多选）
                     </Typography>
                     <Autocomplete
                         multiple
