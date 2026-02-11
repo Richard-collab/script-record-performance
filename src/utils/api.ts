@@ -250,6 +250,81 @@ import type { AnalyticsData, AnalyticsGroup, AnalyticsMetric } from '../types/an
 import dayjs from 'dayjs';
 
 /**
+ * 生成日期范围内的所有日期字符串
+ * @param startDate - 开始日期 (YYYY-MM-DD)
+ * @param endDate - 结束日期 (YYYY-MM-DD)
+ * @returns 日期字符串数组
+ */
+export function generateDateRange(startDate: string, endDate: string): string[] {
+  const dates: string[] = [];
+  let current = dayjs(startDate);
+  const end = dayjs(endDate);
+
+  // 防止死循环或过大范围，限制最大天数（例如365天）
+  let count = 0;
+  while ((current.isBefore(end) || current.isSame(end, 'day')) && count < 365) {
+    dates.push(current.format('YYYY-MM-DD'));
+    current = current.add(1, 'day');
+    count++;
+  }
+  return dates;
+}
+
+/**
+ * 根据日期范围获取所有出现过的脚本（取并集）
+ * @param startDate - 开始日期 (YYYY-MM-DD)
+ * @param endDate - 结束日期 (YYYY-MM-DD)
+ * @returns 脚本名称数组
+ */
+export async function getScriptsByDateRange(startDate: string, endDate: string): Promise<string[]> {
+  const dates = generateDateRange(startDate, endDate);
+  try {
+    // 并行获取每一天的脚本列表
+    const promises = dates.map(date => getInfoByDate(date));
+    const results = await Promise.all(promises);
+
+    // 取并集
+    const allScripts = new Set<string>();
+    results.forEach(scriptList => {
+      if (Array.isArray(scriptList)) {
+        scriptList.forEach(script => allScripts.add(script));
+      }
+    });
+
+    return Array.from(allScripts);
+  } catch (error) {
+    console.error("Error fetching scripts by date range:", error);
+    return [];
+  }
+}
+
+/**
+ * 根据日期范围和脚本名称获取任务数据
+ * @param startDate - 开始日期 (YYYY-MM-DD)
+ * @param endDate - 结束日期 (YYYY-MM-DD)
+ * @param scriptNames - 脚本名称 (单个字符串或字符串数组)
+ * @returns 任务数据数组
+ */
+export async function getTasksByScriptAndDateRange(
+  startDate: string,
+  endDate: string,
+  scriptNames: string | string[]
+): Promise<ScriptTaskData[]> {
+  const dates = generateDateRange(startDate, endDate);
+  try {
+    // 并行获取每一天的数据
+    const promises = dates.map(date => getInfoByScript(date, scriptNames));
+    const results = await Promise.all(promises);
+
+    // 扁平化结果
+    return results.flat();
+  } catch (error) {
+    console.error("Error fetching tasks by script and date range:", error);
+    return [];
+  }
+}
+
+/**
  * 解析 key_corpus_hit_rate 字符串为对象
  * 输入示例："{'问候语': 0.9999, '开场白': 0.8105, ...}" (Python dict格式)
  */
@@ -516,13 +591,14 @@ export async function fetchAnalyticsData(
     throw new Error('日期范围不能为空');
   }
 
-  const dateStr = dayjs(startDate).format('YYYY-MM-DD');
+  const startDateStr = dayjs(startDate).format('YYYY-MM-DD');
+  const endDateStr = dayjs(endDate).format('YYYY-MM-DD');
   
   try {
-    // 并行获取基准组和实验组的数据
+    // 并行获取基准组和实验组的数据（支持多天数据聚合）
     const [baselineData, experimentData] = await Promise.all([
-      getInfoByScript(dateStr, baselineScript),
-      getInfoByScript(dateStr, experimentScript)
+      getTasksByScriptAndDateRange(startDateStr, endDateStr, baselineScript),
+      getTasksByScriptAndDateRange(startDateStr, endDateStr, experimentScript)
     ]);
 
     // 处理基准组数据：根据选择的任务进行聚合或筛选

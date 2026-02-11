@@ -6,7 +6,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import SearchIcon from '@mui/icons-material/Search';
 import dayjs, { type Dayjs } from 'dayjs';
 import type { FilterParams } from '../types/analytics';
-import { getInfoByDate, getInfoByScript } from '../utils/api';
+import { getScriptsByDateRange, getTasksByScriptAndDateRange } from '../utils/api';
 import { formatScriptName, formatTaskName } from '../utils/formatters';
 
 interface FilterPanelProps {
@@ -104,17 +104,18 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onSearch, initialFilters, onS
     // ==========================================
 
     /**
-     * 1. 当开始日期 (startDate) 变化时，获取该日期的可用脚本列表
+     * 1. 当日期范围变化时，获取该范围内的所有可用脚本列表（取并集）
      *    重置所有后续的选择（脚本、任务）
      */
     useEffect(() => {
         const isMounting = isFirstRun.current;
 
         const fetchScripts = async () => {
-            if (startDate) {
-                const dateStr = startDate.format('YYYY-MM-DD');
+            if (startDate && endDate) {
+                const startDateStr = startDate.format('YYYY-MM-DD');
+                const endDateStr = endDate.format('YYYY-MM-DD');
                 try {
-                    const scripts = await getInfoByDate(dateStr);
+                    const scripts = await getScriptsByDateRange(startDateStr, endDateStr);
                     setAvailableScripts(scripts || []);
                     
                     // 仅在非初始化阶段清除
@@ -131,25 +132,25 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onSearch, initialFilters, onS
             }
         };
         fetchScripts();
-    }, [startDate]); // initialFilters is not dep, but we check ref logic
+    }, [startDate, endDate]); // initialFilters is not dep, but we check ref logic
 
     /**
-     * 2. 当基准组脚本 (baselineScript) 变化时，获取该脚本下的任务列表
-     *    并自动选中第一个任务
+     * 2. 当基准组脚本 (baselineScript) 变化时，获取该脚本下的任务列表（范围内取并集）
      */
     useEffect(() => {
         const isMounting = isFirstRun.current;
 
         const fetchBaselineTasks = async () => {
-            if (baselineScript && startDate) {
+            if (baselineScript && startDate && endDate) {
                 if (!isMounting && !initialFilters?.baselineTask) {
                      setBaselineTask([]);
                 }
 
-                const dateStr = startDate.format('YYYY-MM-DD');
+                const startDateStr = startDate.format('YYYY-MM-DD');
+                const endDateStr = endDate.format('YYYY-MM-DD');
                 try {
-                    console.log(`Fetching baseline tasks for script: ${baselineScript}, date: ${dateStr}`);
-                    const data = await getInfoByScript(dateStr, baselineScript);
+                    console.log(`Fetching baseline tasks for script: ${baselineScript}, date: ${startDateStr} to ${endDateStr}`);
+                    const data = await getTasksByScriptAndDateRange(startDateStr, endDateStr, baselineScript);
                     
                     // 提取唯一的任务名称并过滤空值
                     const tasks = Array.from(new Set(data.map(item => item.task_name || ''))).filter(Boolean);
@@ -171,25 +172,25 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onSearch, initialFilters, onS
             }
         };
         fetchBaselineTasks();
-    }, [baselineScript, startDate]);
+    }, [baselineScript, startDate, endDate]);
 
     /**
-     * 3. 当实验组脚本 (experimentScript) 变化时，获取该脚本下的任务列表
-     *    并自动选中第一个任务
+     * 3. 当实验组脚本 (experimentScript) 变化时，获取该脚本下的任务列表（范围内取并集）
      */
     useEffect(() => {
         const isMounting = isFirstRun.current;
 
         const fetchExperimentTasks = async () => {
-             if (experimentScript && startDate) {
+             if (experimentScript && startDate && endDate) {
                 if (!isMounting && !initialFilters?.experimentScript) {
                     setExperimentTask([]);
                 }
 
-                const dateStr = startDate.format('YYYY-MM-DD');
+                const startDateStr = startDate.format('YYYY-MM-DD');
+                const endDateStr = endDate.format('YYYY-MM-DD');
                 try {
-                    console.log(`Fetching experiment tasks for script: ${experimentScript}, date: ${dateStr}`);
-                    const data = await getInfoByScript(dateStr, experimentScript);
+                    console.log(`Fetching experiment tasks for script: ${experimentScript}, date: ${startDateStr} to ${endDateStr}`);
+                    const data = await getTasksByScriptAndDateRange(startDateStr, endDateStr, experimentScript);
                     
                     const tasks = Array.from(new Set(data.map(item => item.task_name || ''))).filter(Boolean);
                     setExperimentTaskOptions(tasks);
@@ -210,7 +211,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onSearch, initialFilters, onS
             }
         };
         fetchExperimentTasks();
-    }, [experimentScript, startDate]);
+    }, [experimentScript, startDate, endDate]);
 
 
     /**
