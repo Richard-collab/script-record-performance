@@ -9,6 +9,12 @@
 - `/api/*` → `http://192.168.23.176:3003/*`
 - `/corpus/*` → `http://192.168.23.176:3006/*`
 
+如需自定义代理目标地址，可设置环境变量（不创建 `.env` 文件）：
+
+```bash
+VITE_PROXY_API_TARGET=http://your-backend:3003 VITE_PROXY_CORPUS_TARGET=http://your-backend:3006 npm run dev
+```
+
 ### 方式二：直接访问后端（用于生产环境或自定义配置）
 
 如果需要直接访问后端服务器（不使用代理），请创建 `.env` 文件：

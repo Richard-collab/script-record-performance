@@ -14,12 +14,12 @@ export default defineConfig(({ mode }) => {
     server: useProxy ? {
       proxy: {
         '/api': {
-          target: 'http://192.168.23.176:3003',
+          target: env.VITE_PROXY_API_TARGET || 'http://192.168.23.176:3003',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, '')
         },
         '/corpus': {
-          target: 'http://192.168.23.176:3006',
+          target: env.VITE_PROXY_CORPUS_TARGET || 'http://192.168.23.176:3006',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/corpus/, '')
         }
