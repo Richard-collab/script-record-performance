@@ -60,7 +60,7 @@ interface HealthResponse {
 // 配置 (Configuration)
 // ==========================================
 
-const BASE_URL = "/api";
+const BASE_URL = "http://192.168.23.176:3003";
 
 // ==========================================
 // 工具函数 (Utils)
@@ -233,7 +233,7 @@ export async function getCorpusByScript(scriptName: string): Promise<CorpusData[
   params.append("script_name", scriptName);
 
   try {
-    const results = await fetchClient<CorpusData[]>('/getCorpusByScript', params, '/corpus');
+    const results = await fetchClient<CorpusData[]>('/getCorpusByScript', params, 'http://192.168.23.176:3006');
     console.log(`✅ GetCorpusByScript Successful: Found ${results.length} records.`);
     return results;
   } catch (error) {
