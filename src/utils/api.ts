@@ -60,7 +60,7 @@ interface HealthResponse {
 // 配置 (Configuration)
 // ==========================================
 
-const BASE_URL = "/api";
+const BASE_URL = "http://192.168.23.176:3003";
 
 // ==========================================
 // 工具函数 (Utils)
@@ -77,33 +77,62 @@ const BASE_URL = "/api";
 async function fetchClient<T>(endpoint: string, params?: URLSearchParams, baseUrl: string = BASE_URL): Promise<T> {
   // Handle relative BASE_URL (for proxy) vs Absolute (for direct access)
   let urlString: string;
-  if (baseUrl.startsWith('http')) {
-      const url = new URL(endpoint, baseUrl);
-      if (params) url.search = params.toString();
-      urlString = url.toString();
-  } else {
-      // For relative paths (proxy), construct the string manually or use window.location
-      const base = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-      const path = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
-      urlString = `${base}${path}`;
-      if (params) {
-          urlString += `?${params.toString()}`;
-      }
+
+  // Construct the string manually to avoid URL object normalization issues
+  const base = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  const path = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
+  urlString = `${base}${path}`;
+
+  if (params) {
+    const queryString = params.toString();
+    if (queryString) {
+      urlString += `?${queryString}`;
+    }
   }
 
   console.log(`\n🚀 Requesting: ${urlString}`);
 
   try {
+    // Reverting to simple fetch to minimize CORS preflight triggers
+    // If the backend doesn't support CORS, this will still fail in the browser,
+    // but avoiding custom headers increases the chance of a "simple request" success.
     const response = await fetch(urlString);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP Error ${response.status}: ${errorText}`);
+    console.log(`📡 Response Status: ${response.status} ${response.statusText}`);
+
+    const text = await response.text();
+    console.log(`📦 Response Body Length: ${text.length}`);
+    if (text.length < 500) {
+      console.log(`📦 Response Body: ${text}`);
     }
 
-    return await response.json() as T;
+    if (!response.ok) {
+      throw new Error(`HTTP Error ${response.status}: ${text}`);
+    }
+
+    // Try to parse JSON, handle potential empty response
+    try {
+      // If text is empty string, return null/empty object depending on expectation,
+      // but usually API should return valid JSON.
+      // For now, let JSON.parse handle it and throw if invalid.
+      if (!text) {
+        console.warn(`⚠️ Warning: Empty response body from ${urlString}`);
+        return {} as T;
+      }
+      return JSON.parse(text) as T;
+    } catch (e) {
+      console.error(`❌ JSON Parse Error. Body: "${text}"`);
+      throw e;
+    }
   } catch (error) {
-    console.error(`❌ Request Failed: ${(error as Error).message}`);
+    const errMsg = (error as Error).message;
+    console.error(`❌ Request Failed: ${errMsg}`);
+
+    // Add specific hint for CORS errors (common when fetch fails completely)
+    if (errMsg === 'Failed to fetch' || errMsg.includes('NetworkError')) {
+      console.error('💡 Hint: This might be a CORS error. Ensure the backend (192.168.23.176) allows requests from this origin.');
+    }
+
     throw error;
   }
 }
@@ -233,7 +262,7 @@ export async function getCorpusByScript(scriptName: string): Promise<CorpusData[
   params.append("script_name", scriptName);
 
   try {
-    const results = await fetchClient<CorpusData[]>('/getCorpusByScript', params, '/corpus');
+    const results = await fetchClient<CorpusData[]>('/getCorpusByScript', params, 'http://192.168.23.176:3006');
     console.log(`✅ GetCorpusByScript Successful: Found ${results.length} records.`);
     return results;
   } catch (error) {
