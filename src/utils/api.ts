@@ -77,31 +77,43 @@ const BASE_URL = "http://192.168.23.176:3003";
 async function fetchClient<T>(endpoint: string, params?: URLSearchParams, baseUrl: string = BASE_URL): Promise<T> {
   // Handle relative BASE_URL (for proxy) vs Absolute (for direct access)
   let urlString: string;
-  if (baseUrl.startsWith('http')) {
-      const url = new URL(endpoint, baseUrl);
-      if (params) url.search = params.toString();
-      urlString = url.toString();
-  } else {
-      // For relative paths (proxy), construct the string manually or use window.location
-      const base = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-      const path = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
-      urlString = `${base}${path}`;
-      if (params) {
-          urlString += `?${params.toString()}`;
-      }
+
+  // Construct the string manually to avoid URL object normalization issues
+  const base = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  const path = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
+  urlString = `${base}${path}`;
+
+  if (params) {
+    const queryString = params.toString();
+    if (queryString) {
+      urlString += `?${queryString}`;
+    }
   }
 
   console.log(`\n🚀 Requesting: ${urlString}`);
 
   try {
     const response = await fetch(urlString);
+    const text = await response.text();
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP Error ${response.status}: ${errorText}`);
+      throw new Error(`HTTP Error ${response.status}: ${text}`);
     }
 
-    return await response.json() as T;
+    // Try to parse JSON, handle potential empty response
+    try {
+      // If text is empty string, return null/empty object depending on expectation,
+      // but usually API should return valid JSON.
+      // For now, let JSON.parse handle it and throw if invalid.
+      if (!text) {
+        console.warn(`⚠️ Warning: Empty response body from ${urlString}`);
+        return {} as T;
+      }
+      return JSON.parse(text) as T;
+    } catch (e) {
+      console.error(`❌ JSON Parse Error. Body: "${text}"`);
+      throw e;
+    }
   } catch (error) {
     console.error(`❌ Request Failed: ${(error as Error).message}`);
     throw error;
