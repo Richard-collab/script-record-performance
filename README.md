@@ -1,5 +1,22 @@
 # bun-react-template
 
+## 环境变量配置
+
+复制 `.env.example` 到 `.env`：
+
+```bash
+cp .env.example .env
+```
+
+根据实际情况修改 API 地址：
+
+```bash
+VITE_API_BASE_URL=http://your-api-server:3003
+VITE_CORPUS_BASE_URL=http://your-corpus-server:3006
+```
+
+## 安装和运行
+
 To install dependencies:
 
 ```bash
