@@ -60,7 +60,9 @@ interface HealthResponse {
 // 配置 (Configuration)
 // ==========================================
 
-const BASE_URL = "/api";
+// 如果环境变量未设置，则回退到使用相对路径（适配代理模式）
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const CORPUS_BASE_URL = import.meta.env.VITE_CORPUS_BASE_URL || '/corpus';
 
 // ==========================================
 // 工具函数 (Utils)
@@ -70,11 +72,11 @@ const BASE_URL = "/api";
  * 发送请求并解析 JSON 的通用封装
  * * @param endpoint - API 路径 (例如 '/search')
  * @param params - URL查询参数对象
- * @param baseUrl - 基础路径，默认为 BASE_URL
+ * @param baseUrl - 基础路径，默认为 API_BASE_URL
  * @returns 解析后的 JSON 数据
  * @throws {Error} 当 HTTP 状态码不是 2xx 时抛出异常
  */
-async function fetchClient<T>(endpoint: string, params?: URLSearchParams, baseUrl: string = BASE_URL): Promise<T> {
+async function fetchClient<T>(endpoint: string, params?: URLSearchParams, baseUrl: string = API_BASE_URL): Promise<T> {
   // Handle relative BASE_URL (for proxy) vs Absolute (for direct access)
   let urlString: string;
   if (baseUrl.startsWith('http')) {
@@ -233,7 +235,7 @@ export async function getCorpusByScript(scriptName: string): Promise<CorpusData[
   params.append("script_name", scriptName);
 
   try {
-    const results = await fetchClient<CorpusData[]>('/getCorpusByScript', params, '/corpus');
+    const results = await fetchClient<CorpusData[]>('/getCorpusByScript', params, CORPUS_BASE_URL);
     console.log(`✅ GetCorpusByScript Successful: Found ${results.length} records.`);
     return results;
   } catch (error) {
