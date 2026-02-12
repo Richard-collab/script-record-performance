@@ -93,8 +93,23 @@ async function fetchClient<T>(endpoint: string, params?: URLSearchParams, baseUr
   console.log(`\n🚀 Requesting: ${urlString}`);
 
   try {
-    const response = await fetch(urlString);
+    const response = await fetch(urlString, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json, text/plain, */*'
+      },
+      mode: 'cors',
+      cache: 'no-cache'
+    });
+
+    console.log(`📡 Response Status: ${response.status} ${response.statusText}`);
+    console.log(`📡 Response Type: ${response.type}`);
+
     const text = await response.text();
+    console.log(`📦 Response Body Length: ${text.length}`);
+    if (text.length < 500) {
+      console.log(`📦 Response Body: ${text}`);
+    }
 
     if (!response.ok) {
       throw new Error(`HTTP Error ${response.status}: ${text}`);
