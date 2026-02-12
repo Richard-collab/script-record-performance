@@ -93,17 +93,12 @@ async function fetchClient<T>(endpoint: string, params?: URLSearchParams, baseUr
   console.log(`\n🚀 Requesting: ${urlString}`);
 
   try {
-    const response = await fetch(urlString, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json, text/plain, */*'
-      },
-      mode: 'cors',
-      cache: 'no-cache'
-    });
+    // Reverting to simple fetch to minimize CORS preflight triggers
+    // If the backend doesn't support CORS, this will still fail in the browser,
+    // but avoiding custom headers increases the chance of a "simple request" success.
+    const response = await fetch(urlString);
 
     console.log(`📡 Response Status: ${response.status} ${response.statusText}`);
-    console.log(`📡 Response Type: ${response.type}`);
 
     const text = await response.text();
     console.log(`📦 Response Body Length: ${text.length}`);
@@ -130,7 +125,14 @@ async function fetchClient<T>(endpoint: string, params?: URLSearchParams, baseUr
       throw e;
     }
   } catch (error) {
-    console.error(`❌ Request Failed: ${(error as Error).message}`);
+    const errMsg = (error as Error).message;
+    console.error(`❌ Request Failed: ${errMsg}`);
+
+    // Add specific hint for CORS errors (common when fetch fails completely)
+    if (errMsg === 'Failed to fetch' || errMsg.includes('NetworkError')) {
+      console.error('💡 Hint: This might be a CORS error. Ensure the backend (192.168.23.176) allows requests from this origin.');
+    }
+
     throw error;
   }
 }
