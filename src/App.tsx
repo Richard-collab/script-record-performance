@@ -8,6 +8,7 @@ import MetricTable from './components/MetricTable';
 import ScriptDiffViewer from './components/ScriptDiffViewer';
 import { theme } from './theme';
 import { useAnalytics } from './hooks/useAnalytics';
+import './index.css'
 
 function App() {
     const {
