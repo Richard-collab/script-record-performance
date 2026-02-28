@@ -7,7 +7,7 @@ import TableChartIcon from '@mui/icons-material/TableChart';
 import ImageIcon from '@mui/icons-material/Image';
 import type { AnalyticsData } from '../types/analytics';
 import * as XLSX from 'xlsx';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 import QRCode from "react-qr-code";
 import dayjs from 'dayjs';
 import BackendDataEditor from './BackendDataEditor';
@@ -157,7 +157,7 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated, data, customMetrics, onAdd
     // 图片导出功能
     const handleImageExportClick = async () => {
         handleClose();
-        const element = document.getElementById('metric-table-container'); // 需要在 MetricTable 增加此 ID
+        const element = document.getElementById('metric-table-container');
         if (!element) return;
 
         // 保存原始样式
@@ -169,27 +169,25 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated, data, customMetrics, onAdd
             element.style.overflow = 'visible';
             element.style.height = 'auto';
 
-            const canvas = await html2canvas(element, {
+            // 获取实际内容的宽度和高度
+            const rect = element.getBoundingClientRect();
+
+            const dataUrl = await toPng(element, {
                 backgroundColor: '#ffffff',
-                scale: 2, // 提高清晰度
-                windowWidth: element.scrollWidth,
-                windowHeight: element.scrollHeight,
+                pixelRatio: 2, // 提高清晰度
+                width: rect.width,
                 height: element.scrollHeight,
-                width: element.scrollWidth,
-                onclone: (clonedDoc) => {
-                    // 确保克隆的元素也是展开的
-                    const clonedElement = clonedDoc.getElementById('metric-table-container');
-                    if (clonedElement) {
-                        clonedElement.style.overflow = 'visible';
-                        clonedElement.style.height = 'auto';
-                        clonedElement.style.maxHeight = 'none';
-                    }
+                style: {
+                    // 确保在克隆元素中保持可见
+                    overflow: 'visible',
+                    height: 'auto',
+                    maxHeight: 'none'
                 }
             });
             
             const link = document.createElement('a');
             link.download = `分析报表_${dayjs().format('YYYYMMDD')}.png`;
-            link.href = canvas.toDataURL('image/png');
+            link.href = dataUrl;
             link.click();
         } catch (error) {
             console.error('Export image failed:', error);

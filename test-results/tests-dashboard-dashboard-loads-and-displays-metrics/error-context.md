@@ -1,0 +1,85 @@
+# Page snapshot
+
+```yaml
+- main [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - heading "分析周期" [level=6] [ref=e8]
+        - paragraph [ref=e9]: 时间范围
+        - generic [ref=e10]:
+          - group [ref=e12]:
+            - generic [ref=e13]:
+              - generic [ref=e14]:
+                - spinbutton "Month" [ref=e15]: "02"
+                - text: /
+              - generic [ref=e16]:
+                - spinbutton "Day" [ref=e17]: "28"
+                - text: /
+              - spinbutton "Year" [ref=e19]: "2026"
+            - button "Choose date, selected date is Feb 28, 2026" [ref=e21] [cursor=pointer]:
+              - img [ref=e22]
+            - group
+            - textbox [ref=e24]: 02/28/2026
+          - paragraph [ref=e25]: "-"
+          - group [ref=e27]:
+            - generic [ref=e28]:
+              - generic [ref=e29]:
+                - spinbutton "Month" [ref=e30]: "02"
+                - text: /
+              - generic [ref=e31]:
+                - spinbutton "Day" [ref=e32]: "28"
+                - text: /
+              - spinbutton "Year" [ref=e34]: "2026"
+            - button "Choose date, selected date is Feb 28, 2026" [ref=e36] [cursor=pointer]:
+              - img [ref=e37]
+            - group
+            - textbox [ref=e39]: 02/28/2026
+      - separator [ref=e40]
+      - generic [ref=e41]:
+        - heading "基准组 (CONTROL)" [level=6] [ref=e42]
+        - paragraph [ref=e43]: 基准话术 (A)
+        - generic [ref=e46]:
+          - combobox "选择或搜索话术" [ref=e47]
+          - button "Open" [ref=e49] [cursor=pointer]:
+            - img [ref=e50]
+          - group
+        - paragraph [ref=e52]: 任务 ID（可多选）
+        - generic [ref=e55]:
+          - combobox "默认全部任务" [disabled] [ref=e56]
+          - generic [ref=e57]:
+            - button "Open" [disabled]:
+              - img
+          - group
+      - generic [ref=e58]: "------- VS -------"
+      - generic [ref=e59]:
+        - heading "实验组 (EXPERIMENT)" [level=6] [ref=e60]
+        - paragraph [ref=e61]: 对比话术 (B)
+        - generic [ref=e64]:
+          - combobox "选择或搜索话术" [ref=e65]
+          - button "Open" [ref=e67] [cursor=pointer]:
+            - img [ref=e68]
+          - group
+        - paragraph [ref=e70]: 任务 ID（可多选）
+        - generic [ref=e73]:
+          - combobox "默认全部任务" [disabled] [ref=e74]
+          - generic [ref=e75]:
+            - button "Open" [disabled]:
+              - img
+          - group
+      - generic [ref=e77]:
+        - generic [ref=e78] [cursor=pointer]:
+          - switch "显示数据统计" [checked] [ref=e81]
+          - paragraph [ref=e84]: 显示数据统计
+        - generic [ref=e85] [cursor=pointer]:
+          - switch "显示话术差异" [ref=e88]
+          - paragraph [ref=e91]: 显示话术差异
+      - generic [ref=e92]:
+        - button "开始分析" [ref=e93] [cursor=pointer]:
+          - img [ref=e95]
+          - text: 开始分析
+        - button "重置筛选" [ref=e97] [cursor=pointer]
+    - generic [ref=e99]:
+      - heading "请在左侧筛选面板选择分析参数" [level=6] [ref=e100]
+      - paragraph [ref=e101]: 选择日期、基准话术和实验话术后，点击"开始分析"按钮
+```
