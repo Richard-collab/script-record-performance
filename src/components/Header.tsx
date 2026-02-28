@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, Button, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, ListItemText, Snackbar, Alert } from '@mui/material';
+import { Box, Typography, Button, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, ListItemText, Snackbar, Alert, Link } from '@mui/material';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -219,6 +219,11 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated, data, customMetrics, onAdd
         }
     };
 
+    var homeUrl = window.location.href;
+    if (homeUrl.includes("?")) {
+        homeUrl = homeUrl.split("?")[0]!;
+    }
+
     return (
         <>
             <Box sx={{
@@ -230,9 +235,11 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated, data, customMetrics, onAdd
                 bgcolor: 'background.paper'
             }}>
                 <Box>
+                    <Link href={homeUrl} underline="none">
                     <Typography variant="h5" fontWeight="bold">
                         话术数据统计看板2.0
                     </Typography>
+                    </Link>
                     <Typography variant="caption" color="text.secondary">
                         最后更新: {lastUpdated}
                     </Typography>
