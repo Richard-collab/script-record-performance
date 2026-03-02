@@ -28,7 +28,7 @@ export function APITester() {
           <option value="GET">GET</option>
           <option value="PUT">PUT</option>
         </select>
-        <input type="text" name="endpoint" defaultValue="/api/hello" className="url-input" placeholder="/api/hello" />
+        <input type="text" name="endpoint" defaultValue="http://192.168.23.176:3003/health" className="url-input" placeholder="http://192.168.23.176:3003/health" />
         <button type="submit" className="send-button">
           Send
         </button>
