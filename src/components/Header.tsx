@@ -170,18 +170,19 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated, data, customMetrics, onAdd
             element.style.height = 'auto';
 
             // 获取实际内容的宽度和高度
-            const rect = element.getBoundingClientRect();
+            const scrollWidth = element.scrollWidth;
 
             const dataUrl = await toPng(element, {
                 backgroundColor: '#ffffff',
                 pixelRatio: 2, // 提高清晰度
-                width: rect.width,
+                width: scrollWidth,
                 height: element.scrollHeight,
                 style: {
                     // 确保在克隆元素中保持可见
                     overflow: 'visible',
                     height: 'auto',
-                    maxHeight: 'none'
+                    maxHeight: 'none',
+                    minWidth: `${scrollWidth}px` // 防止元素因为容器收缩而被截断
                 }
             });
             
