@@ -163,25 +163,32 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated, data, customMetrics, onAdd
         // 保存原始样式
         const originalOverflow = element.style.overflow;
         const originalHeight = element.style.height;
+        const originalWidth = element.style.width;
+        const originalMinWidth = element.style.minWidth;
 
         try {
-            // 临时修改样式以展开所有内容
+            // 临时修改样式以展开所有内容，避免被当前窗口大小截断
             element.style.overflow = 'visible';
             element.style.height = 'auto';
+            element.style.width = 'auto';
+            element.style.minWidth = `${element.scrollWidth}px`;
 
-            // 获取实际内容的宽度和高度
-            const rect = element.getBoundingClientRect();
+            // 使用 scrollWidth 和 scrollHeight 以获取完整内容的尺寸，而不是受限于当前窗口的 rect 尺寸
+            const width = element.scrollWidth;
+            const height = element.scrollHeight;
 
             const dataUrl = await toPng(element, {
                 backgroundColor: '#ffffff',
                 pixelRatio: 2, // 提高清晰度
-                width: rect.width,
-                height: element.scrollHeight,
+                width: width,
+                height: height,
                 style: {
-                    // 确保在克隆元素中保持可见
+                    // 确保在克隆元素中保持可见和完整宽度
                     overflow: 'visible',
                     height: 'auto',
-                    maxHeight: 'none'
+                    maxHeight: 'none',
+                    width: `${width}px`,
+                    minWidth: `${width}px`
                 }
             });
             
@@ -196,6 +203,8 @@ const Header: React.FC<HeaderProps> = ({ lastUpdated, data, customMetrics, onAdd
             // 恢复原始样式
             element.style.overflow = originalOverflow;
             element.style.height = originalHeight;
+            element.style.width = originalWidth;
+            element.style.minWidth = originalMinWidth;
         }
     };
 
